@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2016.08.01-04:26:06 (last modified)
+// Timestamp: 2016.11.04-11:34:41 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -24,15 +24,13 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   
   o.getfn = name => o.fn(fnObj, name, 'fnfn');
 
-  o.getnode = (graph, node, relnodepath = './') => (
+  o.getnode = (graph, node, relnodepath = './') =>
     typeof o.getgraphnode === 'function'
       ? o.getgraphnode(graph, node, relnodepath)
-      : node
-  );
+      : node;
 
-  o.objlookup = (namespaceStr, obj) => (
-    namespaceStr.split('.').reduce((a, b) => a ? a[b] : null, obj)
-  );
+  o.objlookup = (namespaceStr, obj) => 
+    namespaceStr.split('.').reduce((a, b) => a ? a[b] : null, obj);
 
   // call a specific node-associated method 
   //
@@ -44,7 +42,7 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     fnguard.isobj(sess, cfg, graph, node, opts)
       .isstr(opts.methodname).isfn(fn);
 
-    var method = o.fn(
+    let method = o.fn(
       o.getnode(graph, node, opts.nodepath),
       opts.methodname, 'method');
     
@@ -72,7 +70,7 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     // else
     //   use current node
 
-    var finData = o.objlookup(
+    let finData = o.objlookup(
       opts.propname, o.getnode(graph, node, opts.nodepath));
     
     if (finData === null ||
@@ -139,7 +137,7 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
       // dynamically generated options
       res = Object.assign({}, opts.options, res || {});
       
-      o.getcb(opts.cbName)(sess, cfg, tree, node, res, fn);
+      o.getcb(opts.cbname)(sess, cfg, tree, node, res, fn);
     });
   };
 
@@ -163,7 +161,7 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     fnguard.isobj(sess, cfg, tree, node, opts).isfn(fn);
 
     accumasync.arrf(opts.objarr, [], (elem, arr, next) => {
-      var baseData = elem.baseData || elem;
+      let baseData = elem.baseData || elem;
       
       o.retopt(sess, cfg, tree, node, baseData, (err, res) => {
         baseData.value = res;
@@ -214,16 +212,18 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
 
   o.retregexp = (sess, cfg, tree, node, opts, fn) => {
     fnguard.isobj(sess, cfg, tree, node, opts).isfn(fn);
+    
     fn(null, new RegExp(opts.value));
   };
 
-  o.retliteral = (sess, cfg, tree, node, opts, fn) => {
+  o.retliteral = (sess, cfg, tree, node, opts, fn) =>
     fn(null, opts.value);
-  };
 
-  o.retthis = (sess, cfg, tree, node, opts, fn) => {
+  o.retthis = (sess, cfg, tree, node, opts, fn) =>
     fn(null, node);
-  };
+
+  o.retopts = (sess, cfg, tree, node, opts, fn) =>
+    fn(null, opts);
 
   // page may represent a data set from which subject data is defined.
   // in this case, page may be null for unselected multioption page object.
@@ -237,7 +237,7 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     fnguard.isobj(sess, cfg, tree).isany(opts, node).isfn(fn);
 
     opts
-      ? o.fn(o, 'ret'+opts.type, 'spec')(sess, cfg, tree, node, opts, fn)
+      ? o.fn(o, 'ret'+(opts.type||'opts'), 'spec')(sess, cfg, tree, node, opts, fn)
       : fn(null, null);
   };
 
@@ -258,7 +258,7 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   o.retDataWHERE = (sess, cfg, tree, basearr = [], query, fn) => {
     fnguard.isobj(sess, cfg, tree, query).isfn(fn);
     
-    var keyarr = query.activeKeyArr || [],
+    let keyarr = query.activeKeyArr || [],
         baseKey = query.baseKey;
 
     baseKey.cast === 'number'

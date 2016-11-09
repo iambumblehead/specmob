@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2016.11.04-11:34:41 (last modified)
+// Timestamp: 2016.11.07-01:07:11 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -13,10 +13,10 @@ const accumasync = require('accumasync'),
 const specmob = module.exports = (cbObj, fnObj, o = {}) => { 
 
   o.fn = (obj, name, type) => {
-    if (name in obj && typeof obj[name] !== 'function') {
-      throw new Error('no '+type+': '+name);
-    } else {
+    if (name in obj && typeof obj[name] === 'function') {
       return obj[name];
+    } else {
+      throw new Error('no '+type+': '+name);
     }
   };
 
@@ -130,7 +130,7 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   o.retcb = (sess, cfg, tree, node, opts, fn) => {
     fnguard.isobj(sess, cfg, tree, node, opts).isfn(fn);
 
-    o.objApplyOptionArr(sess, cfg, tree, node, opts.optarr, (err, res) => {
+    o.retobj(sess, cfg, tree, node, opts.optarr, (err, res) => {
       if (err) return fn(err);
 
       // formvalues and literal options may be defined alongside

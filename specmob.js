@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2016.11.07-01:07:11 (last modified)
+// Timestamp: 2016.11.14-09:05:44 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -121,8 +121,12 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
 
     o.getopts(sess, cfg, graph, node, opts, (err, options) => {
       if (err) return fn(err);
-      
-      fn(null, o.getfn(opts.fnname)(sess, cfg, graph, node, options));
+
+      // argprops...
+      //console.log('argprops', opts.argprops, node);
+      fn(null, o.getfn(opts.fnname)(sess, cfg, graph, node, (
+        opts.argprops ? opts.argprops.map(propname => node[propname]) : []
+      ), options));
     });
   };
 
@@ -307,11 +311,14 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   // filters a user added valu
   //
   // applies a series of mutations to a value...
-  o.applySpecFilters = (sess, cfg, tree, node, filterArr, fn) => {
+  o.applyfilterarr = (sess, cfg, tree, node, filterarr, fn) => {
     fnguard.isobj(sess, cfg, tree, node).isfn(fn);
 
-    accumasync.arrf(filterArr || [], node, (filteropt, prev, next) => (
-      o.retopt(sess, cfg, tree, prev, filteropt, next)
+    accumasync.arrf(filterarr || [], node, (filteropt, prev, next) => (
+      o.retopt(sess, cfg, tree, prev, filteropt, (err, val) => (
+        // accumulates filtered value on 'val'
+        next(null, Object.assign({}, prev, { val }))
+      ))
     ), fn);      
   };
 

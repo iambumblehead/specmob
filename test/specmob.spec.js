@@ -1,5 +1,5 @@
 // Filename: specmob.spec.js  
-// Timestamp: 2016.08.01-04:16:05 (last modified)
+// Timestamp: 2016.11.11-23:25:22 (last modified)
 // Author(s): bumblehead <chris@bumblehead.com>
 
 var specmob = require('../');
@@ -309,7 +309,7 @@ describe("specmob.applySpecFilters", () => {
       add5 : (sess, cfg, graph, node, opts) =>
         Object.assign(
           {}, node, { [opts.propname] : node[opts.propname] + 5 }
-        ),
+        )
     }).applySpecFilters({}, {}, {}, {val : ' 55 '}, [{
       type : "fn",
       fnname : 'strip',

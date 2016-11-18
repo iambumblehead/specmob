@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2016.11.14-09:05:44 (last modified)
+// Timestamp: 2016.11.18-11:32:02 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -12,6 +12,8 @@ const accumasync = require('accumasync'),
 
 const specmob = module.exports = (cbObj, fnObj, o = {}) => { 
 
+  o.accumasync = accumasync;
+  
   o.fn = (obj, name, type) => {
     if (name in obj && typeof obj[name] === 'function') {
       return obj[name];
@@ -123,7 +125,6 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
       if (err) return fn(err);
 
       // argprops...
-      //console.log('argprops', opts.argprops, node);
       fn(null, o.getfn(opts.fnname)(sess, cfg, graph, node, (
         opts.argprops ? opts.argprops.map(propname => node[propname]) : []
       ), options));
@@ -165,11 +166,9 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     fnguard.isobj(sess, cfg, tree, node, opts).isfn(fn);
 
     accumasync.arrf(opts.objarr, [], (elem, arr, next) => {
-      let baseData = elem.baseData || elem;
-      
-      o.retopt(sess, cfg, tree, node, baseData, (err, res) => {
-        baseData.value = res;
-        arr.push(baseData);
+      o.retopt(sess, cfg, tree, node, elem, (err, res) => {
+        elem.value = res;
+        arr.push(elem);
         next(null, arr);
       });
     }, fn);
@@ -182,7 +181,9 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
       o.retopt(sess, cfg, tree, node, option, (err, value) => {
         if (err) return fn(err);
 
-        prev[option.name] = value;
+        
+        prev[option.name || 'value'] = value;
+        
         setTimeout(e => next(null, prev));        
       });        
     }, fn);
@@ -311,13 +312,13 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   // filters a user added valu
   //
   // applies a series of mutations to a value...
-  o.applyfilterarr = (sess, cfg, tree, node, filterarr, fn) => {
-    fnguard.isobj(sess, cfg, tree, node).isfn(fn);
+  o.applyfilterarr = (sess, cfg, tree, obj, filterarr, fn) => {
+    fnguard.isobj(sess, cfg, tree, obj).isfn(fn);
 
-    accumasync.arrf(filterarr || [], node, (filteropt, prev, next) => (
+    accumasync.arrf(filterarr || [], obj, (filteropt, prev, next) => (
       o.retopt(sess, cfg, tree, prev, filteropt, (err, val) => (
         // accumulates filtered value on 'val'
-        next(null, Object.assign({}, prev, { val }))
+        next(null, Object.assign({}, prev, {val}))
       ))
     ), fn);      
   };

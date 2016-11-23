@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2016.11.18-11:32:02 (last modified)
+// Timestamp: 2016.11.23-01:08:23 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -26,6 +26,18 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   
   o.getfn = name => o.fn(fnObj, name, 'fnfn');
 
+  // convenience function to return current val or spec-generated 'defaultval'
+  o.valordefaultval = (sess, cfg, graph, node, opts, val, fn) => {
+    fnguard.isobj(sess, cfg, graph, opts).isany(node, val).isfn(fn);
+
+    if ((val === null ||
+         val === undefined) && opts.defaultval) {
+      o.retopt(sess, cfg, graph, node, opts.defaultval, fn);
+    } else {
+      fn(null, val);
+    }
+  };
+  
   o.getnode = (graph, node, relnodepath = './') =>
     typeof o.getgraphnode === 'function'
       ? o.getgraphnode(graph, node, relnodepath)
@@ -50,7 +62,7 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     
     fn(null, method(sess, cfg, graph, node, opts.methodVal || opts));
   };
-
+  
   // obtain a value on a node property property
   //
   // if !object, a defaultval may be used. ex, ad defaltval of type literal
@@ -71,16 +83,9 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     //   optain property from other node if node
     // else
     //   use current node
-
-    let finData = o.objlookup(
-      opts.propname, o.getnode(graph, node, opts.nodepath));
-    
-    if (finData === null ||
-        finData === undefined && opts.defaultval) {
-      o.retopt(sess, cfg, graph, node, opts.defaultval, fn);
-    } else {
-      fn(null, finData);
-    }
+    o.valordefaultval(sess, cfg, graph, node, opts, (
+      o.objlookup(opts.propname, o.getnode(graph, node, opts.nodepath))
+    ), fn);
   };
   
   // create a new object, each property is dynamically property constructed
@@ -124,10 +129,10 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     o.getopts(sess, cfg, graph, node, opts, (err, options) => {
       if (err) return fn(err);
 
-      // argprops...
-      fn(null, o.getfn(opts.fnname)(sess, cfg, graph, node, (
-        opts.argprops ? opts.argprops.map(propname => node[propname]) : []
-      ), options));
+      let fin = o.getfn(opts.fnname)(sess, cfg, graph, node, (
+        opts.argprops ? opts.argprops.map(propname => node[propname]) : []), options);
+
+      o.valordefaultval(sess, cfg, graph, node, opts, fin, fn);
     });
   };
 

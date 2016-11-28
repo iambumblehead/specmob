@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2016.11.23-01:08:23 (last modified)
+// Timestamp: 2016.11.25-19:05:33 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -123,8 +123,7 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   };
   
   o.retfn = (sess, cfg, graph, node, opts, fn) => {
-    fnguard.isobj(sess, cfg, graph, node, opts)
-      .isstr(opts.fnname).isfn(fn);
+    fnguard.isobj(sess, cfg, graph, node, opts).isstr(opts.fnname).isfn(fn);
 
     o.getopts(sess, cfg, graph, node, opts, (err, options) => {
       if (err) return fn(err);
@@ -137,17 +136,17 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   };
 
   // options should be value
-  o.retcb = (sess, cfg, tree, node, opts, fn) => {
-    fnguard.isobj(sess, cfg, tree, node, opts).isfn(fn);
+  o.retcb = (sess, cfg, traph, node, opts, fn) => {
+    fnguard.isobj(sess, cfg, traph, node, opts).isfn(fn);
 
-    o.retobj(sess, cfg, tree, node, opts.optarr, (err, res) => {
+    o.getopts(sess, cfg, traph, node, opts, (err, options) => {
       if (err) return fn(err);
 
-      // formvalues and literal options may be defined alongside
-      // dynamically generated options
-      res = Object.assign({}, opts.options, res || {});
-      
-      o.getcb(opts.cbname)(sess, cfg, tree, node, res, fn);
+      o.getcb(opts.cbname)(sess, cfg, traph, node, options, (err, fin) => {
+        if (err) return fn(err);
+
+        o.valordefaultval(sess, cfg, traph, node, opts, fin, fn);        
+      });
     });
   };
 
@@ -179,7 +178,7 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     }, fn);
   };
 
-  o.retobj = (sess, cfg, tree, node, optarr, fn) => {
+  o.retobj = (sess, cfg, tree, node, optarr=[], fn) => {
     fnguard.isobj(sess, cfg, tree, node).isfn(fn);
 
     accumasync.arr(optarr, {}, (option, prev, next) => {
@@ -301,7 +300,10 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     
     if (spec.optarr) {
       o.retproparr(sess, cfg, tree, node, spec, (err, options) => {
-        fn(null, options);
+        // copy to spec.options if exists
+        //
+        // allows literal options to be defined alongside dynamically generated ones
+        fn(null, Object.assign({}, spec.options || {}, options || {}));
       });
     } else if (spec.options) {
       fn(null, spec.options);

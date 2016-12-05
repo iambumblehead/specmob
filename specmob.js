@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2016.11.25-19:05:33 (last modified)
+// Timestamp: 2016.12.05-09:59:44 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -116,7 +116,10 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
       o.retopt(sess, cfg, tree, node, option, (err, res) => {
         if (err) return fn(err);
 
-        prev[option.name] = res;
+        option.name
+          ? prev[option.name] = res
+          : Object.assign(prev, res);
+        
         next(null, prev);
       });
     }, fn);

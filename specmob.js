@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2016.12.08-10:07:48 (last modified)
+// Timestamp: 2016.12.19-17:41:20 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -124,6 +124,9 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
       });
     }, fn);
   };
+
+  o.getargs = (opts, node) => 
+    opts.argprops ? opts.argprops.map(propname => node[propname]) : [];
   
   o.retfn = (sess, cfg, graph, node, opts, fn) => {
     fnguard.isobj(sess, cfg, graph, node, opts).isstr(opts.fnname).isfn(fn);
@@ -131,8 +134,8 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     o.getopts(sess, cfg, graph, node, opts, (err, options) => {
       if (err) return fn(err);
 
-      let fin = o.getfn(opts.fnname)(sess, cfg, graph, node, (
-        opts.argprops ? opts.argprops.map(propname => node[propname]) : []), options);
+      let fin = o.getfn(opts.fnname)(
+        o.getargs(opts, node), options, sess, cfg, graph, node);
 
       o.valordefaultval(sess, cfg, graph, node, opts, fin, fn);
     });
@@ -145,11 +148,11 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     o.getopts(sess, cfg, traph, node, opts, (err, options) => {
       if (err) return fn(err);
 
-      o.getcb(opts.cbname)(sess, cfg, traph, node, options, (err, fin) => {
+      o.getcb(opts.cbname)(o.getargs(opts, node), options, (err, fin) => {
         if (err) return fn(err);
 
         o.valordefaultval(sess, cfg, traph, node, opts, fin, fn);        
-      });
+      }, sess, cfg, traph, node);
     });
   };
 
@@ -276,9 +279,9 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     let keyarr = query.activeKeyArr || [],
         baseKey = query.baseKey;
 
-    baseKey.cast === 'number'
-      && keyarr.map(key => +key);
-
+    query.cast === 'number'
+      && (keyarr = keyarr.map(key => +key));
+    
     accumasync.arr(basearr, [], (obj, prev, next) => {
       o.retopt(sess, cfg, tree, obj, baseKey, (err, value) => {
         if (err) return fn(err);

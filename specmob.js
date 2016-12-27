@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2016.12.19-17:41:20 (last modified)
+// Timestamp: 2016.12.27-10:33:54 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -289,6 +289,8 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
         if (~keyarr.indexOf(value)) {
           prev.push(obj);
         }
+
+        //next(null, prev);
         setTimeout(x => next(null, prev));
       });        
     }, fn);
@@ -337,6 +339,64 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
         next(null, Object.assign({}, prev, {val}))
       ))
     ), fn);      
+  };
+
+
+  ///////////////
+  ///////////////
+  o.validationAND = (sess, cfg, tree, node, val, validatorArr, fn) => {
+    fnguard.isobj(sess, cfg, tree, node).isfn(fn);
+
+    (function next (x, len) {
+      if (x >= len) return fn(null, null); // no errors
+
+      o.geterror(sess, cfg, tree, node, validatorArr[x], val, (err, errMsg) => {
+        if (err) return fn(err);
+        if (errMsg) return fn(null, errMsg);
+        next(++x, len);
+      });
+    }(0, validatorArr.length));
+  };
+
+  o.validationOR = (sess, cfg, tree, node, val, validatorArr, fn) => {
+    fnguard.isobj(sess, cfg, tree, node).isfn(fn);
+
+    (function next (x, len, errorMessage) {
+      if (x >= len) return fn(null, errorMessage);
+      o.geterror(sess, cfg, tree, node, validatorArr[x], val, (err, errMsg) => {
+        if (err) return fn(err);
+        if (errMsg) {
+          next(++x, len, errMsg);
+        } else {
+          fn(null, null); // no error message -passing.
+        }
+      });
+    }(0, validatorArr.length));
+  };
+
+  o.geterror = (sess, cfg, tree, node, spec, value, fn) => {
+    fnguard.isobj(sess, cfg, tree, spec).isfn(fn);
+    let type = spec.type,
+        VERIFYRe = /^verify$/i,
+        ANDRe = /^AND$/i,
+        ORRe  = /^OR$/i;
+
+    if (ANDRe.test(type)) {
+      o.validationAND(sess, cfg, tree, node, value, spec.validatorArr, fn);
+    } else if (ORRe.test(type)) {
+      o.validationOR(sess, cfg, tree, node, value, spec.validatorArr, fn);
+    } else if (VERIFYRe.test(type)) {
+      o.getopts(sess, cfg, tree, node, spec, (err, options) => {
+        if (err) return fn(err);
+        if (o.getFn(spec.name)(value, options || spec.options)) {
+          fn(null, null);
+        } else {
+          fn(null, spec.errorKey);
+        }
+      });
+    } else {
+      fn(null, null);
+    }
   };
 
   return o;

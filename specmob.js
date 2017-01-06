@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2016.12.27-10:33:54 (last modified)
+// Timestamp: 2017.01.06-06:31:26 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -255,7 +255,9 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     fnguard.isobj(sess, cfg, tree).isany(opts, node).isfn(fn);
 
     opts
-      ? o.fn(o, 'ret'+(opts.type||'opts'), 'spec')(sess, cfg, tree, node, opts, fn)
+      ? (opts.spread 
+         ? fn(null, opts)
+         : o.fn(o, 'ret'+(opts.type||'opts'), 'spec')(sess, cfg, tree, node, opts, fn))
       : fn(null, null);
   };
 

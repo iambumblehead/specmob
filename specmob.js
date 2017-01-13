@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2017.01.13-00:48:55 (last modified)
+// Timestamp: 2017.01.13-11:12:20 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -26,6 +26,8 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   o.getcb = name => o.fn(cbObj, name, 'cbfn');
   
   o.getfn = name => o.fn(fnObj, name, 'fnfn');
+
+  o.getspecfn = name => o.fn(o, 'ret'+(name||'opts'), 'spec');
 
   // convenience function to return current val or spec-generated 'defaultval'
   o.valordefaultval = (sess, cfg, graph, node, opts, val, fn) => {
@@ -126,7 +128,7 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     }, fn);
   };
 
-  o.getargs = (opts, node) => 
+  o.getargs = (opts, node, options, args=[]) => 
     opts.argprops ? opts.argprops.map(propname => node[propname]) : [];
   
   o.retfn = (sess, cfg, graph, node, opts, fn) => {
@@ -134,9 +136,9 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
 
     o.getopts(sess, cfg, graph, node, opts, (err, options) => {
       if (err) return fn(err);
-
+            
       let fin = o.getfn(opts.fnname)(
-        o.getargs(opts, node), options, sess, cfg, graph, node);
+        o.getargs(opts, node, options), options, sess, cfg, graph, node);
 
       o.valordefaultval(sess, cfg, graph, node, opts, fin, fn);
     });
@@ -185,21 +187,31 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     }, fn);
   };
 
+  o.getfiltered = (sess, cfg, traph, val, filterarr, fn) => {
+    if (Array.isArray(filterarr)) {
+      o.applyfilterarr(sess, cfg, traph, {val}, filterarr, (err, {val}) => {
+        fn(null, val);
+      });
+    } else {
+      fn(null, val);
+    }
+  };  
+
   o.retobj = (sess, cfg, tree, node, optarr=[], fn) => {
     fnguard.isobj(sess, cfg, tree, node).isfn(fn);
 
     accumasync.arr(optarr, {}, (option, prev, next) => {
-      o.retopt(sess, cfg, tree, node, option, (err, value) => {
+      o.retopt(sess, cfg, tree, node, option, (err, val) => {
         if (err) return fn(err);
-
-        if (typeof value === 'object' && value) {
-          prev = Object.assign({}, prev, value);
+        
+        if (typeof val === 'object' && val) {
+          prev = Object.assign(prev, val);
         } else {
-          prev[option.name || 'value'] = value;
+          prev[option.name || 'value'] = val;
         }
         
-        setTimeout(e => next(null, prev));        
-      });        
+        setTimeout(e => next(null, prev));
+      });
     }, fn);
   };
 
@@ -255,11 +267,15 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   o.retopt = (sess, cfg, tree, node, opts, fn) => {
     fnguard.isobj(sess, cfg, tree).isany(opts, node).isfn(fn);
 
-    opts
-      ? (opts.spread 
-         ? fn(null, opts)
-         : o.fn(o, 'ret'+(opts.type||'opts'), 'spec')(sess, cfg, tree, node, opts, fn))
-      : fn(null, null);
+    if (!opts) {
+      return fn(null, null);
+    } else if (opts.spread) {
+      return fn(null, opts);
+    }
+
+    o.getspecfn(opts.type)(sess, cfg, tree, node, opts, (err, res) => (
+      o.getfiltered(sess, cfg, tree, res, opts.filterarr, fn)
+    ));
   };
 
   // baseData where key returns a match w/ an activeKey value
@@ -297,7 +313,6 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
           prev.push(obj);
         }
 
-        //next(null, prev);
         setTimeout(x => next(null, prev));
       });        
     }, fn);
@@ -315,7 +330,7 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   //
   o.getopts = (sess, cfg, tree, node, spec, fn) => {
     fnguard.isobj(sess, cfg, tree, node, spec).isfn(fn);
-    
+
     if (spec.optarr) {
       o.retproparr(sess, cfg, tree, node, spec, (err, options) => {
         // copy to spec.options if exists
@@ -338,7 +353,7 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   //
   // applies a series of mutations to a value...
   o.applyfilterarr = (sess, cfg, tree, obj, filterarr, fn) => {
-    fnguard.isobj(sess, cfg, tree, obj).isfn(fn);
+    fnguard.isobj(sess, cfg, tree, obj).isany(filterarr).isfn(fn);
 
     accumasync.arrf(filterarr || [], obj, (filteropt, prev, next) => (
       o.retopt(sess, cfg, tree, prev, filteropt, (err, val) => (

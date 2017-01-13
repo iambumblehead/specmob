@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2017.01.06-06:31:26 (last modified)
+// Timestamp: 2017.01.13-00:48:55 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -8,7 +8,8 @@
 // communication w/ server.
 
 const accumasync = require('accumasync'),
-      fnguard = require('fnguard');
+      fnguard = require('fnguard'),
+      castas = require('castas');
 
 const specmob = module.exports = (cbObj, fnObj, o = {}) => { 
 
@@ -279,10 +280,14 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     fnguard.isobj(sess, cfg, tree, query).isfn(fn);
     
     let keyarr = query.activeKeyArr || [],
-        baseKey = query.baseKey;
+        baseKey = query.baseKey,
+        casttype = basearr.length
+          ? typeof basearr[0]
+          : 'string';
 
-    query.cast === 'number'
-      && (keyarr = keyarr.map(key => +key));
+    if (casttype !== 'string' && castas[casttype]) {
+      keyarr = keyarr.map(key => castas[casttype](key));
+    }
     
     accumasync.arr(basearr, [], (obj, prev, next) => {
       o.retopt(sess, cfg, tree, obj, baseKey, (err, value) => {

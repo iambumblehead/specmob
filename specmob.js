@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2017.01.13-11:12:20 (last modified)
+// Timestamp: 2017.01.15-03:47:51 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -363,29 +363,27 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     ), fn);      
   };
 
-
-  ///////////////
-  ///////////////
-  o.validationAND = (sess, cfg, tree, node, val, validatorArr, fn) => {
+  o.whenAND = (sess, cfg, tree, node, whenarr, fn) => {
     fnguard.isobj(sess, cfg, tree, node).isfn(fn);
 
     (function next (x, len) {
       if (x >= len) return fn(null, null); // no errors
 
-      o.geterror(sess, cfg, tree, node, validatorArr[x], val, (err, errMsg) => {
+      o.geterror(sess, cfg, tree, node, whenarr[x], (err, errMsg) => {
         if (err) return fn(err);
         if (errMsg) return fn(null, errMsg);
+        
         next(++x, len);
       });
-    }(0, validatorArr.length));
+    }(0, whenarr.length));
   };
 
-  o.validationOR = (sess, cfg, tree, node, val, validatorArr, fn) => {
+  o.whenOR = (sess, cfg, tree, node, val, whenarr, fn) => {
     fnguard.isobj(sess, cfg, tree, node).isfn(fn);
 
     (function next (x, len, errorMessage) {
       if (x >= len) return fn(null, errorMessage);
-      o.geterror(sess, cfg, tree, node, validatorArr[x], val, (err, errMsg) => {
+      o.geterror(sess, cfg, tree, node, whenarr[x], val, (err, errMsg) => {
         if (err) return fn(err);
         if (errMsg) {
           next(++x, len, errMsg);
@@ -393,33 +391,38 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
           fn(null, null); // no error message -passing.
         }
       });
-    }(0, validatorArr.length));
+    }(0, whenarr.length));
   };
 
-  o.geterror = (sess, cfg, tree, node, spec, value, fn) => {
-    fnguard.isobj(sess, cfg, tree, spec).isfn(fn);
-    let type = spec.type,
-        VERIFYRe = /^verify$/i,
-        ANDRe = /^AND$/i,
-        ORRe  = /^OR$/i;
+  o.geterror = (sess, cfg, traph, node, spec, fn) => {
+    fnguard.isobj(sess, cfg, traph, spec).isfn(fn);
+    const type = spec.type,
+          ANDRe = /^AND$/i,
+          ORRe  = /^OR$/i;
 
     if (ANDRe.test(type)) {
-      o.validationAND(sess, cfg, tree, node, value, spec.validatorArr, fn);
+      o.whenAND(sess, cfg, traph, node, spec.whenarr, fn);
     } else if (ORRe.test(type)) {
-      o.validationOR(sess, cfg, tree, node, value, spec.validatorArr, fn);
-    } else if (VERIFYRe.test(type)) {
-      o.getopts(sess, cfg, tree, node, spec, (err, options) => {
+      o.whenOR(sess, cfg, traph, node, spec.whenarr, fn);
+    } else {
+      o.getopts(sess, cfg, traph, node, spec, (err, options) => {
         if (err) return fn(err);
-        if (o.getFn(spec.name)(value, options || spec.options)) {
+
+        if (o.getfn(spec.fnname)(o.getargs(spec, node), options, sess, cfg, traph, node)) {
           fn(null, null);
         } else {
-          fn(null, spec.errorKey);
+          fn(null, spec.errkey || 'errkey');
         }
       });
-    } else {
-      fn(null, null);
     }
   };
+
+  o.getpass = (sess, cfg, traph, node, spec, value, fn) =>
+    o.geterror(sess, cfg, traph, node, spec, value, (err, errmsg) => {
+      if (err || errmsg) return fn(err, errmsg);
+
+      fn(null, null, true);
+    });
 
   return o;
 };

@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2017.01.15-03:47:51 (last modified)
+// Timestamp: 2017.01.18-08:50:13 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -378,12 +378,12 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     }(0, whenarr.length));
   };
 
-  o.whenOR = (sess, cfg, tree, node, val, whenarr, fn) => {
+  o.whenOR = (sess, cfg, tree, node, whenarr, fn) => {
     fnguard.isobj(sess, cfg, tree, node).isfn(fn);
 
     (function next (x, len, errorMessage) {
       if (x >= len) return fn(null, errorMessage);
-      o.geterror(sess, cfg, tree, node, whenarr[x], val, (err, errMsg) => {
+      o.geterror(sess, cfg, tree, node, whenarr[x], (err, errMsg) => {
         if (err) return fn(err);
         if (errMsg) {
           next(++x, len, errMsg);

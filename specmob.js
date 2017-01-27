@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2017.01.18-08:50:13 (last modified)
+// Timestamp: 2017.01.27-15:01:23 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -23,6 +23,11 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     }
   };
 
+  o.throw_returnundefined = (namespace, opts) => {
+    console.error(namespace, opts);
+    throw new Error('[!!!] final spec results must not be not be `undefined`');
+  };
+
   o.getcb = name => o.fn(cbObj, name, 'cbfn');
   
   o.getfn = name => o.fn(fnObj, name, 'fnfn');
@@ -30,12 +35,15 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   o.getspecfn = name => o.fn(o, 'ret'+(name||'opts'), 'spec');
 
   // convenience function to return current val or spec-generated 'defaultval'
-  o.valordefaultval = (sess, cfg, graph, node, opts, val, fn) => {
-    fnguard.isobj(sess, cfg, graph, opts).isany(node, val).isfn(fn);
+  o.valordefaultval = (sess, cfg, graph, node, namespace, opts, val, fn) => {
+    fnguard
+      .isobj(sess, cfg, graph, opts)
+      .isany(node, namespace, val)
+      .isfn(fn);
 
     if ((val === null ||
          val === undefined) && opts.defaultval) {
-      o.retopt(sess, cfg, graph, node, opts.defaultval, fn);
+      o.retopt(sess, cfg, graph, node, namespace, opts.defaultval, fn);
     } else {
       fn(null, val);
     }
@@ -55,8 +63,8 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   //  "type" : "method",
   //  "methodname" : "getpropname"  
   // },  
-  o.retmethod = (sess, cfg, graph, node, opts, fn) => {
-    fnguard.isobj(sess, cfg, graph, node, opts)
+  o.retmethod = (sess, cfg, graph, node, namespace, opts, fn) => {
+    fnguard.isobj(sess, cfg, graph, node, namespace, opts)
       .isstr(opts.methodname).isfn(fn);
 
     let method = o.fn(
@@ -78,16 +86,17 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   //    "value" : "USD"
   //  }
   // },  
-  o.retobjprop = (sess, cfg, graph, node, opts, fn) => {
-    fnguard.isobj(sess, cfg, graph, opts).isany(node)
+  o.retobjprop = (sess, cfg, graph, node, namespace, opts, fn) => {
+    fnguard.isobj(sess, cfg, graph, node, opts).isany(namespace)
       .isstr(opts.propname).isfn(fn);
 
     // if nodepath
     //   optain property from other node if node
     // else
     //   use current node
-    o.valordefaultval(sess, cfg, graph, node, opts, (
-      o.objlookup(opts.propname, o.getnode(graph, node, opts.nodepath))
+    o.valordefaultval(sess, cfg, graph, node, namespace, opts, (
+      o.objlookup(opts.propname, namespace)
+      //o.objlookup(opts.propname, o.getnode(graph, node, opts.nodepath))
     ), fn);
   };
   
@@ -111,12 +120,13 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   //    }]
   //  },
   //
-  o.retproparr = (sess, cfg, tree, node, opts, fn) => {
+  o.retproparr = (sess, cfg, tree, node, namespace, opts, fn) => {
     fnguard.isobj(sess, cfg, tree, node, opts)
+      .isany(namespace)
       .isarr(opts.optarr).isfn(fn);
 
     accumasync.arr(opts.optarr, {}, (option, prev, next) => {
-      o.retopt(sess, cfg, tree, node, option, (err, res) => {
+      o.retopt(sess, cfg, tree, node, namespace, option, (err, res) => {
         if (err) return fn(err);
 
         option.name
@@ -128,33 +138,35 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     }, fn);
   };
 
-  o.getargs = (opts, node, options, args=[]) => 
-    opts.argprops ? opts.argprops.map(propname => node[propname]) : [];
+  o.getargs = (opts, namespace, options, args=[]) => 
+    opts.argprops ? opts.argprops.map(propname => (
+      propname === 'this' ? namespace : namespace[propname])) : [];
   
-  o.retfn = (sess, cfg, graph, node, opts, fn) => {
-    fnguard.isobj(sess, cfg, graph, node, opts).isstr(opts.fnname).isfn(fn);
+  o.retfn = (sess, cfg, graph, node, namespace, opts, fn) => {
+    fnguard.isobj(sess, cfg, graph, node, opts)
+      .isany(namespace).isstr(opts.fnname).isfn(fn);
 
-    o.getopts(sess, cfg, graph, node, opts, (err, options) => {
+    o.getopts(sess, cfg, graph, node, namespace, opts, (err, options) => {
       if (err) return fn(err);
-            
-      let fin = o.getfn(opts.fnname)(
-        o.getargs(opts, node, options), options, sess, cfg, graph, node);
 
-      o.valordefaultval(sess, cfg, graph, node, opts, fin, fn);
+      let fin = o.getfn(opts.fnname)(
+        o.getargs(opts, namespace, options), options, sess, cfg, graph, node);
+
+      o.valordefaultval(sess, cfg, graph, node, namespace, opts, fin, fn);
     });
   };
 
   // options should be value
-  o.retcb = (sess, cfg, traph, node, opts, fn) => {
-    fnguard.isobj(sess, cfg, traph, node, opts).isfn(fn);
+  o.retcb = (sess, cfg, traph, node, namespace, opts, fn) => {
+    fnguard.isobj(sess, cfg, traph, node, namespace, opts).isfn(fn);
 
-    o.getopts(sess, cfg, traph, node, opts, (err, options) => {
+    o.getopts(sess, cfg, traph, node, namespace, opts, (err, options) => {
       if (err) return fn(err);
 
-      o.getcb(opts.cbname)(o.getargs(opts, node), options, (err, fin) => {
+      o.getcb(opts.cbname)(o.getargs(opts, namespace), options, (err, fin) => {
         if (err) return fn(err);
 
-        o.valordefaultval(sess, cfg, traph, node, opts, fin, fn);        
+        o.valordefaultval(sess, cfg, traph, node, namespace, opts, fin, fn);        
       }, sess, cfg, traph, node);
     });
   };
@@ -175,11 +187,11 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   //     propName : "address"
   //   }]
   // }
-  o.retobjarr = (sess, cfg, tree, node, opts, fn) => {
-    fnguard.isobj(sess, cfg, tree, node, opts).isfn(fn);
+  o.retobjarr = (sess, cfg, tree, node, namespace, opts, fn) => {
+    fnguard.isobj(sess, cfg, tree, node, namespace, opts).isfn(fn);
 
     accumasync.arrf(opts.objarr, [], (elem, arr, next) => {
-      o.retopt(sess, cfg, tree, node, elem, (err, res) => {
+      o.retopt(sess, cfg, tree, node, namespace, elem, (err, res) => {
         elem.value = res;
         arr.push(elem);
         next(null, arr);
@@ -187,9 +199,9 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     }, fn);
   };
 
-  o.getfiltered = (sess, cfg, traph, val, filterarr, fn) => {
+  o.getfiltered = (sess, cfg, traph, val, namespace, filterarr, fn) => {
     if (Array.isArray(filterarr)) {
-      o.applyfilterarr(sess, cfg, traph, {val}, filterarr, (err, {val}) => {
+      o.applyfilterarr(sess, cfg, traph, {val}, namespace, filterarr, (err, {val}) => {
         fn(null, val);
       });
     } else {
@@ -197,13 +209,13 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     }
   };  
 
-  o.retobj = (sess, cfg, tree, node, optarr=[], fn) => {
-    fnguard.isobj(sess, cfg, tree, node).isfn(fn);
+  o.retobj = (sess, cfg, tree, node, namespace, optarr=[], fn) => {
+    fnguard.isobj(sess, cfg, tree, node, namespace).isfn(fn);
 
     accumasync.arr(optarr, {}, (option, prev, next) => {
-      o.retopt(sess, cfg, tree, node, option, (err, val) => {
+      o.retopt(sess, cfg, tree, node, namespace, option, (err, val) => {
         if (err) return fn(err);
-        
+
         if (typeof val === 'object' && val) {
           prev = Object.assign(prev, val);
         } else {
@@ -215,11 +227,11 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     }, fn);
   };
 
-  o.retoptarr = (sess, cfg, tree, node, opts, fn) => {
-    fnguard.isobj(sess, cfg, tree, node, opts).isfn(fn);
+  o.retoptarr = (sess, cfg, tree, node, namespace, opts, fn) => {
+    fnguard.isobj(sess, cfg, tree, node, namespace, opts).isfn(fn);
 
     accumasync.arrf(opts.optarr, [], (elem, arr, next) => {
-      o.retopt(sess, cfg, tree, node, elem, (err, res) => {
+      o.retopt(sess, cfg, tree, node, namespace, elem, (err, res) => {
         if (err) return fn(err);
         arr.push(res);
         next(null, arr);
@@ -228,11 +240,11 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   };
 
   // apply a single option group to the entire arr
-  o.retarr = (sess, cfg, tree, node, opts, objarr, fn) => {
-    fnguard.isobj(sess, cfg, tree, node).isfn(fn);
+  o.retarr = (sess, cfg, tree, node, namespace, opts, objarr, fn) => {
+    fnguard.isobj(sess, cfg, tree, node, namespace).isfn(fn);
 
     accumasync.arrf(objarr || [], [], (obj, prev, next) => {
-      o.retopt(sess, cfg, tree, obj, opts, (err, value)  => {
+      o.retopt(sess, cfg, tree, obj, namespace, opts, (err, value)  => {
         if (err) return fn(err);
 
         prev.push(value);
@@ -241,19 +253,19 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     }, fn);
   };
 
-  o.retregexp = (sess, cfg, tree, node, opts, fn) => {
-    fnguard.isobj(sess, cfg, tree, node, opts).isfn(fn);
+  o.retregexp = (sess, cfg, tree, node, namespace, opts, fn) => {
+    fnguard.isobj(sess, cfg, tree, node, namespace, opts).isfn(fn);
     
     fn(null, new RegExp(opts.value));
   };
 
-  o.retliteral = (sess, cfg, tree, node, opts, fn) =>
+  o.retliteral = (sess, cfg, tree, node, namespace, opts, fn) =>
     fn(null, opts.value);
 
-  o.retthis = (sess, cfg, tree, node, opts, fn) =>
+  o.retthis = (sess, cfg, tree, node, namespace, opts, fn) =>
     fn(null, node);
 
-  o.retopts = (sess, cfg, tree, node, opts, fn) =>
+  o.retopts = (sess, cfg, tree, node, namespace, opts, fn) =>
     fn(null, opts);
 
   // page may represent a data set from which subject data is defined.
@@ -264,8 +276,8 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   //   objprop, cb, fieldval,
   //   literal, fn, optarr,
   //   objarr, method
-  o.retopt = (sess, cfg, tree, node, opts, fn) => {
-    fnguard.isobj(sess, cfg, tree).isany(opts, node).isfn(fn);
+  o.retopt = (sess, cfg, tree, node, namespace, opts, fn) => {
+    fnguard.isobj(sess, cfg, tree).isany(namespace, opts, node).isfn(fn);
 
     if (!opts) {
       return fn(null, null);
@@ -273,9 +285,11 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
       return fn(null, opts);
     }
 
-    o.getspecfn(opts.type)(sess, cfg, tree, node, opts, (err, res) => (
-      o.getfiltered(sess, cfg, tree, res, opts.filterarr, fn)
-    ));
+    o.getspecfn(opts.type)(sess, cfg, tree, node, namespace, opts, (err, res) => {
+      if (err) return fn(err);
+      
+      o.getfiltered(sess, cfg, tree, res, res, opts.filterarr, fn);
+    });
   };
 
   // baseData where key returns a match w/ an activeKey value
@@ -292,8 +306,8 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   //
   // pushes entire baseobject into the final array whos value matches
   // **slow**
-  o.retDataWHERE = (sess, cfg, tree, basearr = [], query, fn) => {
-    fnguard.isobj(sess, cfg, tree, query).isfn(fn);
+  o.retDataWHERE = (sess, cfg, tree, node, basearr = [], namespace, query, fn) => {
+    fnguard.isobj(sess, cfg, tree, namespace, query).isfn(fn);
     
     let keyarr = query.activeKeyArr || [],
         baseKey = query.baseKey,
@@ -306,9 +320,9 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     }
     
     accumasync.arr(basearr, [], (obj, prev, next) => {
-      o.retopt(sess, cfg, tree, obj, baseKey, (err, value) => {
+      o.retopt(sess, cfg, tree, node, obj, baseKey, (err, value) => {
         if (err) return fn(err);
-        
+
         if (~keyarr.indexOf(value)) {
           prev.push(obj);
         }
@@ -328,11 +342,11 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   // 2) options:
   // a static object literal that is passed as an options object 
   //
-  o.getopts = (sess, cfg, tree, node, spec, fn) => {
-    fnguard.isobj(sess, cfg, tree, node, spec).isfn(fn);
+  o.getopts = (sess, cfg, tree, node, namespace, spec, fn) => {
+    fnguard.isobj(sess, cfg, tree, node, spec).isany(namespace).isfn(fn);
 
     if (spec.optarr) {
-      o.retproparr(sess, cfg, tree, node, spec, (err, options) => {
+      o.retproparr(sess, cfg, tree, node, namespace, spec, (err, options) => {
         // copy to spec.options if exists
         //
         // allows literal options to be defined alongside dynamically generated ones
@@ -352,24 +366,24 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   // filters a user added valu
   //
   // applies a series of mutations to a value...
-  o.applyfilterarr = (sess, cfg, tree, obj, filterarr, fn) => {
-    fnguard.isobj(sess, cfg, tree, obj).isany(filterarr).isfn(fn);
+  o.applyfilterarr = (sess, cfg, tree, obj, namespace, filterarr, fn) => {
+    fnguard.isobj(sess, cfg, tree, obj).isany(namespace, filterarr).isfn(fn);
 
     accumasync.arrf(filterarr || [], obj, (filteropt, prev, next) => (
-      o.retopt(sess, cfg, tree, prev, filteropt, (err, val) => (
+      o.retopt(sess, cfg, tree, prev, namespace, filteropt, (err, val) => (
         // accumulates filtered value on 'val'
         next(null, Object.assign({}, prev, {val}))
       ))
     ), fn);      
   };
 
-  o.whenAND = (sess, cfg, tree, node, whenarr, fn) => {
-    fnguard.isobj(sess, cfg, tree, node).isfn(fn);
+  o.whenAND = (sess, cfg, tree, node, namespace, whenarr, fn) => {
+    fnguard.isobj(sess, cfg, tree, node).isany(namespace).isfn(fn);
 
     (function next (x, len) {
       if (x >= len) return fn(null, null); // no errors
 
-      o.geterror(sess, cfg, tree, node, whenarr[x], (err, errMsg) => {
+      o.geterror(sess, cfg, tree, node, namespace, whenarr[x], (err, errMsg) => {
         if (err) return fn(err);
         if (errMsg) return fn(null, errMsg);
         
@@ -378,12 +392,12 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     }(0, whenarr.length));
   };
 
-  o.whenOR = (sess, cfg, tree, node, whenarr, fn) => {
-    fnguard.isobj(sess, cfg, tree, node).isfn(fn);
+  o.whenOR = (sess, cfg, tree, node, namespace, whenarr, fn) => {
+    fnguard.isobj(sess, cfg, tree, node).isany(namespace).isfn(fn);
 
     (function next (x, len, errorMessage) {
       if (x >= len) return fn(null, errorMessage);
-      o.geterror(sess, cfg, tree, node, whenarr[x], (err, errMsg) => {
+      o.geterror(sess, cfg, tree, node, namespace, whenarr[x], (err, errMsg) => {
         if (err) return fn(err);
         if (errMsg) {
           next(++x, len, errMsg);
@@ -394,21 +408,21 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     }(0, whenarr.length));
   };
 
-  o.geterror = (sess, cfg, traph, node, spec, fn) => {
-    fnguard.isobj(sess, cfg, traph, spec).isfn(fn);
+  o.geterror = (sess, cfg, traph, node, namespace, spec, fn) => {
+    fnguard.isobj(sess, cfg, traph, spec, namespace).isfn(fn);
     const type = spec.type,
           ANDRe = /^AND$/i,
           ORRe  = /^OR$/i;
 
     if (ANDRe.test(type)) {
-      o.whenAND(sess, cfg, traph, node, spec.whenarr, fn);
+      o.whenAND(sess, cfg, traph, node, namespace, spec.whenarr, fn);
     } else if (ORRe.test(type)) {
-      o.whenOR(sess, cfg, traph, node, spec.whenarr, fn);
+      o.whenOR(sess, cfg, traph, node, namespace, spec.whenarr, fn);
     } else {
-      o.getopts(sess, cfg, traph, node, spec, (err, options) => {
+      o.getopts(sess, cfg, traph, node, namespace, spec, (err, options) => {
         if (err) return fn(err);
 
-        if (o.getfn(spec.fnname)(o.getargs(spec, node), options, sess, cfg, traph, node)) {
+        if (o.getfn(spec.fnname)(o.getargs(spec, namespace), options, sess, cfg, traph, node)) {
           fn(null, null);
         } else {
           fn(null, spec.errkey || 'errkey');
@@ -417,8 +431,8 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     }
   };
 
-  o.getpass = (sess, cfg, traph, node, spec, value, fn) =>
-    o.geterror(sess, cfg, traph, node, spec, value, (err, errmsg) => {
+  o.getpass = (sess, cfg, traph, node, namespace, spec, value, fn) =>
+    o.geterror(sess, cfg, traph, node, namespace, spec, value, (err, errmsg) => {
       if (err || errmsg) return fn(err, errmsg);
 
       fn(null, null, true);

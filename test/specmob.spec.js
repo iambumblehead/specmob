@@ -1,8 +1,23 @@
 // Filename: specmob.spec.js  
-// Timestamp: 2016.11.11-23:25:22 (last modified)
+// Timestamp: 2017.01.27-15:03:50 (last modified)
 // Author(s): bumblehead <chris@bumblehead.com>
 
-var specmob = require('../');
+const specmob = require('../'),
+      
+      namespace = 'namespace',
+      rules = 'rules',
+      graph = 'graph',
+      node = 'node',
+      sess = 'sess',
+      cfg = 'cfg',
+
+      namespaceo = {namespace},
+      ruleso = {rules},
+      grapho = {graph},
+      nodeo = {node},
+      sesso = {sess},
+      cfgo = {cfg};
+
 
 describe("specmob.objlookup", () => {
   it("should return 'world', for 'hello.my' and `{hello:{my:'world'}}`", () => {
@@ -14,20 +29,22 @@ describe("specmob.objlookup", () => {
   });
 });
 
+
 describe("specmob.retobjprop", () => {
+
   it("should ret an object property", (done) => {
     var opts = {
       type : "objprop",
       propname : "hello.my"
     };
 
-    var node = {
+    var namespace = {
       hello : {
         my : 'world'
       }
     };
     
-    specmob().retobjprop({}, {}, {}, node, opts, (err, res) => {
+    specmob().retobjprop(sesso, cfgo, grapho, nodeo, namespace, opts, (err, res) => {
       expect(res).toBe('world');
       done();
     });    
@@ -46,11 +63,12 @@ describe("specmob.retobjprop", () => {
 
     var node = {};
     
-    specmob().retobjprop({}, {}, {}, node, opts, (err, res) => {
+    specmob().retobjprop({}, {}, {}, node, {}, opts, (err, res) => {
       expect(res).toBe('defaultworld');
       done();
     });    
   });  
+
 });
 
 describe("specmob.retmethod", () => {
@@ -64,7 +82,7 @@ describe("specmob.retmethod", () => {
       getpropname : () => 'world'
     };
     
-    specmob().retmethod({}, {}, {}, node, opts, (err, res) => {
+    specmob().retmethod({}, {}, {}, node, {}, opts, (err, res) => {
       expect(res).toBe('world');
       done();
     });    
@@ -95,12 +113,13 @@ describe("specmob.retobjarr", () => {
         'tuesday',
       getwednesday : (sess, cfg, graph, node, opts) =>
         'wednesday'
-    }).retobjarr({}, {}, {}, node, opts, (err, res) => {
+    }).retobjarr({}, {}, {}, node, {}, opts, (err, res) => {
       expect(res[1].value).toBe('wednesday');
       done();
     });    
   });
 });
+
 
 describe("specmob.retoptarr", () => {
   it("should ret a new set of data from a fixed set of dynamic data", (done) => {
@@ -124,7 +143,7 @@ describe("specmob.retoptarr", () => {
         'tuesday',
       getwednesday : (sess, cfg, graph, node, opts) =>
         'wednesday'
-    }).retoptarr({}, {}, {}, node, opts, (err, res) => {
+    }).retoptarr({}, {}, {}, node, {}, opts, (err, res) => {
       expect(res[1]).toBe('wednesday');
       done();
     });    
@@ -142,7 +161,7 @@ describe("specmob.retproparr", () => {
       }]
     };
     
-    specmob().retproparr({}, {}, {}, {}, opts, (err, res) => {
+    specmob().retproparr({}, {}, {}, {}, {}, opts, (err, res) => {
       expect(res.myprop).toBe('myvalue');
       done();
     });
@@ -162,7 +181,7 @@ describe("specmob.retproparr", () => {
       }]
     };
     
-    specmob().retproparr({}, {}, {}, {}, opts, (err, res) => {
+    specmob().retproparr({}, {}, {}, {}, {}, opts, (err, res) => {
       expect(res.myprop + res.myprop2).toBe('myvaluemyvalue2');
       done();
     });    
@@ -183,13 +202,13 @@ describe("specmob.retobj", () => {
 
     var node = {
       world : 'world'
-    };    
+    };
     
     specmob({}, {
-      getmodifiedval : (sess, cfg, graph, node, opts) => (
+      getmodifiedval : ([], opts, sess, cfg, graph, node) => (
         node.world + 'modified'
       )
-    }).retobj({}, {}, {}, node, optarr, (err, res) => {
+    }).retobj(sesso, cfgo, grapho, node, {}, optarr, (err, res) => {
       expect(res.modifiedval).toBe('worldmodified');
       expect(res.literalval).toBe('worldliteral');      
       done();
@@ -214,10 +233,10 @@ describe("specmob.objArrApplyOption", () => {
     }];
     
     specmob({}, {
-      getmodifiedval : (sess, cfg, graph, node, opts) => (
+      getmodifiedval : ([], opts, sess, cfg, graph, node) => (
         node.val + 'modified'
       )
-    }).retarr({}, {}, {}, {}, opt, objarr, (err, res) => {
+    }).retarr(sesso, cfgo, grapho, nodeo, namespaceo, opt, objarr, (err, res) => {
       expect(res[0]).toBe('helloemailmodified');
       expect(res[1]).toBe('hellopassmodified');      
       done();
@@ -225,14 +244,17 @@ describe("specmob.objArrApplyOption", () => {
   });
 
   it("should return an empty array by default", (done) => {    
-    specmob({}, {}).retarr({}, {}, {}, {}, {}, null, (err, res) => {
+    specmob({}, {}).retarr(sesso, cfgo, grapho, nodeo, namespaceo, {}, null, (err, res) => {
       expect(res.length).toBe(0);
       done();
     });
   });  
+
 });
 
+
 describe("specmob.retDataWHERE", () => {
+
   it("should obtain a query", (done) => {
     var opt = {
       type : "fn",
@@ -251,7 +273,7 @@ describe("specmob.retDataWHERE", () => {
       value : 'washington'      
     }];
     
-    specmob({}, {}).retDataWHERE({}, {}, {}, basearr, {
+    specmob({}, {}).retDataWHERE(sesso, cfgo, grapho, nodeo, basearr, namespaceo, {
       activeKeyArr : [1],
       baseKey : {
         type : "objprop",
@@ -281,7 +303,7 @@ describe("specmob.retDataWHERE", () => {
       value : 'washington'      
     }];
     
-    specmob({}, {}).retDataWHERE({}, {}, {}, basearr, {
+    specmob({}, {}).retDataWHERE(sesso, cfgo, grapho, nodeo, basearr, namespaceo, {
       activeKeyArr : [1,0],
       baseKey : {
         type : "objprop",
@@ -293,24 +315,20 @@ describe("specmob.retDataWHERE", () => {
       done();
     });
   });  
+
 });
+
 
 describe("specmob.applySpecFilters", () => {
   it("should apply a sequence of filters", (done) => {
     specmob({}, {
-      strip : (sess, cfg, graph, node, opts) => 
-        Object.assign(
-          {}, node, { [opts.propname] : node[opts.propname].trim() }
-        ),
-      tonum : (sess, cfg, graph, node, opts) =>
-        Object.assign(
-          {}, node, { [opts.propname] : +node[opts.propname] }
-        ),
-      add5 : (sess, cfg, graph, node, opts) =>
-        Object.assign(
-          {}, node, { [opts.propname] : node[opts.propname] + 5 }
-        )
-    }).applySpecFilters({}, {}, {}, {val : ' 55 '}, [{
+      strip : ([val], opts, sess, cfg, graph, node) =>
+          node[opts.propname].trim(),
+      tonum : ([val], opts, sess, cfg, graph, node) =>
+         +node[opts.propname],
+      add5 : ([val], opts, sess, cfg, graph, node) =>
+         node[opts.propname] + 5
+    }).applyfilterarr(sesso, cfgo, grapho, {val : ' 55 '}, namespaceo, [{
       type : "fn",
       fnname : 'strip',
       options : { propname : 'val' }
@@ -342,10 +360,10 @@ describe("specmob.retfn", () => {
     };    
     
     specmob({}, {
-      getmodifiedval : (sess, cfg, graph, node, opts) => (
+      getmodifiedval : ([val], opts, sess, cfg, graph, node) => (
         node.world + 'modified'
       )
-    }).retfn({}, {}, {}, node, opts, (err, res) => {
+    }).retfn(sesso, cfgo, grapho, node, namespaceo, opts, (err, res) => {
       expect(res).toBe('worldmodified');
       done();
     });
@@ -364,12 +382,13 @@ describe("specmob.retfn", () => {
     };    
     
     specmob({}, {
-      getmodifiedval : (sess, cfg, graph, node, opts) => (
+      getmodifiedval : ([val], opts, sess, cfg, graph, node) => (
         node.world + 'modified'
       )
-    }).retfn({}, {}, {}, node, opts, (err, res) => {
+    }).retfn(sesso, cfgo, grapho, node, namespaceo, opts, (err, res) => {
       expect(res).toBe('worldmodified');
       done();
     });
   });
 });
+

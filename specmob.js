@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2017.01.27-15:01:23 (last modified)
+// Timestamp: 2017.01.29-19:34:35 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -23,10 +23,32 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     }
   };
 
-  o.throw_returnundefined = (namespace, opts) => {
-    console.error(namespace, opts);
-    throw new Error('[!!!] final spec results must not be not be `undefined`');
+  o.getnodeuid = node =>
+    node && typeof node.get === 'function' && node.get('uid');  
+
+  o.stringify = obj =>
+    JSON.stringify(obj, null, '  ');
+  
+  o.throw = (...args) => {
+    console.error('[!!!] specmob: ', ...args);
+    throw new Error(...args);
   };
+
+  o.thrownode = (traph, node, ...args) => {
+    window.errtraph = traph;
+    window.errnode  = node;
+    console.error('errtraph: ', traph && traph.toJS && traph.toJS());
+    console.error('errnode: ', node && node.toJS && node.toJS());
+    o.throw(o.getnodeuid(node), ...args);
+  };
+
+  o.throw_returnundefined = (traph, node, namespace, opts) =>
+    o.thrownode(traph, node, (
+      '[!!!] final spec results must not be not be `undefined`: ' + o.stringify(opts)));
+
+  o.throw_namespaceundefined = (traph, node, namespace, opts) =>
+    o.thrownode(traph, node, (
+      '[!!!] arg namespace must not be `undefined`: ' + o.stringify(opts)));
 
   o.getcb = name => o.fn(cbObj, name, 'cbfn');
   
@@ -138,19 +160,34 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     }, fn);
   };
 
-  o.getargs = (opts, namespace, options, args=[]) => 
+  o.getnamespaceargval = (graph, node, opts, namespace, arg) => {
+    let argval = null;
+    
+    if (arg === 'this') {
+      argval = namespace;
+    } else if (namespace) {
+      argval = namespace[arg];
+    } else {
+      console.log('node?', node);
+      o.throw_namespaceundefined(graph, node, namespace, opts);
+    }
+
+    return argval;
+  };
+
+  o.getargs = (graph, node, opts, namespace, options, args=[]) =>
     opts.argprops ? opts.argprops.map(propname => (
-      propname === 'this' ? namespace : namespace[propname])) : [];
-  
+      o.getnamespaceargval(graph, node, opts, namespace, propname))) : [];
+
   o.retfn = (sess, cfg, graph, node, namespace, opts, fn) => {
     fnguard.isobj(sess, cfg, graph, node, opts)
       .isany(namespace).isstr(opts.fnname).isfn(fn);
 
     o.getopts(sess, cfg, graph, node, namespace, opts, (err, options) => {
       if (err) return fn(err);
-
-      let fin = o.getfn(opts.fnname)(
-        o.getargs(opts, namespace, options), options, sess, cfg, graph, node);
+      
+      let args = o.getargs(graph, node, opts, namespace, options),
+          fin = o.getfn(opts.fnname)(args, options, sess, cfg, graph, node);
 
       o.valordefaultval(sess, cfg, graph, node, namespace, opts, fin, fn);
     });
@@ -163,7 +200,9 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     o.getopts(sess, cfg, traph, node, namespace, opts, (err, options) => {
       if (err) return fn(err);
 
-      o.getcb(opts.cbname)(o.getargs(opts, namespace), options, (err, fin) => {
+      let args = o.getargs(traph, node, opts, namespace);
+      
+      o.getcb(opts.cbname)(args, options, (err, fin) => {
         if (err) return fn(err);
 
         o.valordefaultval(sess, cfg, traph, node, namespace, opts, fin, fn);        
@@ -422,7 +461,8 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
       o.getopts(sess, cfg, traph, node, namespace, spec, (err, options) => {
         if (err) return fn(err);
 
-        if (o.getfn(spec.fnname)(o.getargs(spec, namespace), options, sess, cfg, traph, node)) {
+        if (o.getfn(spec.fnname)(
+          o.getargs(traph, node, spec, namespace), options, sess, cfg, traph, node)) {
           fn(null, null);
         } else {
           fn(null, spec.errkey || 'errkey');

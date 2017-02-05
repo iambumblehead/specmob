@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2017.01.29-19:34:35 (last modified)
+// Timestamp: 2017.02.04-18:48:40 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -27,7 +27,8 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     node && typeof node.get === 'function' && node.get('uid');  
 
   o.stringify = obj =>
-    JSON.stringify(obj, null, '  ');
+    (/string|boolean|number/.test(typeof obj)
+     ? obj : JSON.stringify(obj, null, '  '));
   
   o.throw = (...args) => {
     console.error('[!!!] specmob: ', ...args);
@@ -50,6 +51,11 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     o.thrownode(traph, node, (
       '[!!!] arg namespace must not be `undefined`: ' + o.stringify(opts)));
 
+  o.throw_valisnotarray = (traph, node, opts) =>
+    o.thrownode(traph, node, (
+      '[!!!] must be an array: ' + o.stringify(opts)));
+  
+
   o.getcb = name => o.fn(cbObj, name, 'cbfn');
   
   o.getfn = name => o.fn(fnObj, name, 'fnfn');
@@ -64,7 +70,7 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
       .isfn(fn);
 
     if ((val === null ||
-         val === undefined) && opts.defaultval) {
+         val === undefined) && opts.defaultval !== undefined) {
       o.retopt(sess, cfg, graph, node, namespace, opts.defaultval, fn);
     } else {
       fn(null, val);
@@ -251,6 +257,10 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   o.retobj = (sess, cfg, tree, node, namespace, optarr=[], fn) => {
     fnguard.isobj(sess, cfg, tree, node, namespace).isfn(fn);
 
+    if (!Array.isArray(optarr)) {
+      o.throw_valisnotarray(tree, node, optarr);
+    }
+
     accumasync.arr(optarr, {}, (option, prev, next) => {
       o.retopt(sess, cfg, tree, node, namespace, option, (err, val) => {
         if (err) return fn(err);
@@ -318,10 +328,11 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   o.retopt = (sess, cfg, tree, node, namespace, opts, fn) => {
     fnguard.isobj(sess, cfg, tree).isany(namespace, opts, node).isfn(fn);
 
-    if (!opts) {
-      return fn(null, null);
-    } else if (opts.spread) {
+    if (/string|number|boolean/.test(typeof opts)
+        || (opts && opts.spread)) {
       return fn(null, opts);
+    } else if (!opts) {
+      return fn(null, null);
     }
 
     o.getspecfn(opts.type)(sess, cfg, tree, node, namespace, opts, (err, res) => {

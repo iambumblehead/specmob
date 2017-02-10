@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2017.02.04-18:48:40 (last modified)
+// Timestamp: 2017.02.10-09:44:12 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -168,7 +168,7 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
 
   o.getnamespaceargval = (graph, node, opts, namespace, arg) => {
     let argval = null;
-    
+
     if (arg === 'this') {
       argval = namespace;
     } else if (namespace) {
@@ -484,7 +484,7 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
 
   o.getpass = (sess, cfg, traph, node, namespace, spec, value, fn) =>
     o.geterror(sess, cfg, traph, node, namespace, spec, value, (err, errmsg) => {
-      if (err || errmsg) return fn(err, errmsg);
+      if (err || errmsg) return fn(err, errmsg, false);
 
       fn(null, null, true);
     });

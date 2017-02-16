@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2017.02.10-09:44:12 (last modified)
+// Timestamp: 2017.02.16-13:41:19 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -14,22 +14,19 @@ const accumasync = require('accumasync'),
 const specmob = module.exports = (cbObj, fnObj, o = {}) => { 
 
   o.accumasync = accumasync;
-  
+
   o.fn = (obj, name, type) => {
     if (name in obj && typeof obj[name] === 'function') {
       return obj[name];
     } else {
-      throw new Error('no '+type+': '+name);
+      throw new Error('no ' + type + ': ' + name);
     }
   };
 
-  o.getnodeuid = node =>
-    node && typeof node.get === 'function' && node.get('uid');  
+  o.getnodeuid = node => node && typeof node.get === 'function' && node.get('uid');
 
-  o.stringify = obj =>
-    (/string|boolean|number/.test(typeof obj)
-     ? obj : JSON.stringify(obj, null, '  '));
-  
+  o.stringify = obj => /string|boolean|number/.test(typeof obj) ? obj : JSON.stringify(obj, null, '  ');
+
   o.throw = (...args) => {
     console.error('[!!!] specmob: ', ...args);
     throw new Error(...args);
@@ -37,53 +34,38 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
 
   o.thrownode = (traph, node, ...args) => {
     window.errtraph = traph;
-    window.errnode  = node;
+    window.errnode = node;
     console.error('errtraph: ', traph && traph.toJS && traph.toJS());
     console.error('errnode: ', node && node.toJS && node.toJS());
     o.throw(o.getnodeuid(node), ...args);
   };
 
-  o.throw_returnundefined = (traph, node, namespace, opts) =>
-    o.thrownode(traph, node, (
-      '[!!!] final spec results must not be not be `undefined`: ' + o.stringify(opts)));
+  o.throw_returnundefined = (traph, node, namespace, opts) => o.thrownode(traph, node, '[!!!] final spec results must not be not be `undefined`: ' + o.stringify(opts));
 
-  o.throw_namespaceundefined = (traph, node, namespace, opts) =>
-    o.thrownode(traph, node, (
-      '[!!!] arg namespace must not be `undefined`: ' + o.stringify(opts)));
+  o.throw_namespaceundefined = (traph, node, namespace, opts) => o.thrownode(traph, node, '[!!!] arg namespace must not be `undefined`: ' + o.stringify(opts));
 
-  o.throw_valisnotarray = (traph, node, opts) =>
-    o.thrownode(traph, node, (
-      '[!!!] must be an array: ' + o.stringify(opts)));
-  
+  o.throw_valisnotarray = (traph, node, opts) => o.thrownode(traph, node, '[!!!] must be an array: ' + o.stringify(opts));
 
   o.getcb = name => o.fn(cbObj, name, 'cbfn');
-  
+
   o.getfn = name => o.fn(fnObj, name, 'fnfn');
 
-  o.getspecfn = name => o.fn(o, 'ret'+(name||'opts'), 'spec');
+  o.getspecfn = name => o.fn(o, 'ret' + (name || 'opts'), 'spec');
 
   // convenience function to return current val or spec-generated 'defaultval'
   o.valordefaultval = (sess, cfg, graph, node, namespace, opts, val, fn) => {
-    fnguard
-      .isobj(sess, cfg, graph, opts)
-      .isany(node, namespace, val)
-      .isfn(fn);
+    fnguard.isobj(sess, cfg, graph, opts).isany(node, namespace, val).isfn(fn);
 
-    if ((val === null ||
-         val === undefined) && opts.defaultval !== undefined) {
+    if ((val === null || val === undefined) && opts.defaultval !== undefined) {
       o.retopt(sess, cfg, graph, node, namespace, opts.defaultval, fn);
     } else {
       fn(null, val);
     }
   };
-  
-  o.getnode = (graph, node, relnodepath = './') =>
-    typeof o.getgraphnode === 'function'
-      ? o.getgraphnode(graph, node, relnodepath)
-      : node;
 
-  o.objlookup = (namespaceStr, obj) => 
-    namespaceStr.split('.').reduce((a, b) => a ? a[b] : null, obj);
+  o.getnode = (graph, node, relnodepath = './') => typeof o.getgraphnode === 'function' ? o.getgraphnode(graph, node, relnodepath) : node;
+
+  o.objlookup = (namespacestr, obj) => String(namespacestr).split('.').reduce((a, b) => a ? b in a ? a[b] : a[Number(b)] : null, obj);
 
   // call a specific node-associated method 
   //
@@ -92,16 +74,13 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   //  "methodname" : "getpropname"  
   // },  
   o.retmethod = (sess, cfg, graph, node, namespace, opts, fn) => {
-    fnguard.isobj(sess, cfg, graph, node, namespace, opts)
-      .isstr(opts.methodname).isfn(fn);
+    fnguard.isobj(sess, cfg, graph, node, namespace, opts).isstr(opts.methodname).isfn(fn);
 
-    let method = o.fn(
-      o.getnode(graph, node, opts.nodepath),
-      opts.methodname, 'method');
-    
+    let method = o.fn(o.getnode(graph, node, opts.nodepath), opts.methodname, 'method');
+
     fn(null, method(sess, cfg, graph, node, opts.methodVal || opts));
   };
-  
+
   // obtain a value on a node property property
   //
   // if !object, a defaultval may be used. ex, ad defaltval of type literal
@@ -115,19 +94,15 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   //  }
   // },  
   o.retobjprop = (sess, cfg, graph, node, namespace, opts, fn) => {
-    fnguard.isobj(sess, cfg, graph, node, opts).isany(namespace)
-      .isstr(opts.propname).isfn(fn);
+    fnguard.isobj(sess, cfg, graph, node, opts).isany(namespace).isnotundefined(opts.propname).isfn(fn);
 
     // if nodepath
     //   optain property from other node if node
     // else
     //   use current node
-    o.valordefaultval(sess, cfg, graph, node, namespace, opts, (
-      o.objlookup(opts.propname, namespace)
-      //o.objlookup(opts.propname, o.getnode(graph, node, opts.nodepath))
-    ), fn);
+    o.valordefaultval(sess, cfg, graph, node, namespace, opts, o.objlookup(opts.propname, namespace), fn);
   };
-  
+
   // create a new object, each property is dynamically property constructed
   //
   //  "subjectData" : {
@@ -149,49 +124,41 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   //  },
   //
   o.retproparr = (sess, cfg, tree, node, namespace, opts, fn) => {
-    fnguard.isobj(sess, cfg, tree, node, opts)
-      .isany(namespace)
-      .isarr(opts.optarr).isfn(fn);
+    fnguard.isobj(sess, cfg, tree, node, opts).isany(namespace).isarr(opts.optarr).isfn(fn);
 
     accumasync.arr(opts.optarr, {}, (option, prev, next) => {
       o.retopt(sess, cfg, tree, node, namespace, option, (err, res) => {
         if (err) return fn(err);
 
-        option.name
-          ? prev[option.name] = res
-          : Object.assign(prev, res);
-        
+        option.name ? prev[option.name] = res : Object.assign(prev, res);
+
         next(null, prev);
       });
     }, fn);
   };
 
-  o.getnamespaceargval = (graph, node, opts, namespace, arg) => {
+  o.getnamespaceargval = (graph, node, opts, namespace, thisval, arg) => {
     let argval = null;
 
     if (arg === 'this') {
-      argval = namespace;
+      argval = thisval;
     } else if (namespace) {
       argval = namespace[arg];
     } else {
-      console.log('node?', node);
       o.throw_namespaceundefined(graph, node, namespace, opts);
     }
 
     return argval;
   };
 
-  o.getargs = (graph, node, opts, namespace, options, args=[]) =>
-    opts.argprops ? opts.argprops.map(propname => (
-      o.getnamespaceargval(graph, node, opts, namespace, propname))) : [];
+  o.getargs = (graph, node, opts, namespace, options, args = []) => opts.argprops ? opts.argprops.map(propname => o.getnamespaceargval(graph, node, opts, namespace, namespace, propname)) : [];
 
   o.retfn = (sess, cfg, graph, node, namespace, opts, fn) => {
-    fnguard.isobj(sess, cfg, graph, node, opts)
-      .isany(namespace).isstr(opts.fnname).isfn(fn);
+    fnguard.isobj(sess, cfg, graph, node, opts).isany(namespace).isstr(opts.fnname).isfn(fn);
 
     o.getopts(sess, cfg, graph, node, namespace, opts, (err, options) => {
       if (err) return fn(err);
-      
+
       let args = o.getargs(graph, node, opts, namespace, options),
           fin = o.getfn(opts.fnname)(args, options, sess, cfg, graph, node);
 
@@ -207,11 +174,11 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
       if (err) return fn(err);
 
       let args = o.getargs(traph, node, opts, namespace);
-      
+
       o.getcb(opts.cbname)(args, options, (err, fin) => {
         if (err) return fn(err);
 
-        o.valordefaultval(sess, cfg, traph, node, namespace, opts, fin, fn);        
+        o.valordefaultval(sess, cfg, traph, node, namespace, opts, fin, fn);
       }, sess, cfg, traph, node);
     });
   };
@@ -244,17 +211,15 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     }, fn);
   };
 
-  o.getfiltered = (sess, cfg, traph, val, namespace, filterarr, fn) => {
+  o.getfiltered = (sess, cfg, traph, node, namespace, filterarr, fn) => {
     if (Array.isArray(filterarr)) {
-      o.applyfilterarr(sess, cfg, traph, {val}, namespace, filterarr, (err, {val}) => {
-        fn(null, val);
-      });
+      o.applyfilterarr(sess, cfg, traph, node, namespace, filterarr, fn);
     } else {
-      fn(null, val);
+      fn(null, namespace);
     }
-  };  
+  };
 
-  o.retobj = (sess, cfg, tree, node, namespace, optarr=[], fn) => {
+  o.retobj = (sess, cfg, tree, node, namespace, optarr = [], fn) => {
     fnguard.isobj(sess, cfg, tree, node, namespace).isfn(fn);
 
     if (!Array.isArray(optarr)) {
@@ -270,7 +235,7 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
         } else {
           prev[option.name || 'value'] = val;
         }
-        
+
         setTimeout(e => next(null, prev));
       });
     }, fn);
@@ -293,29 +258,26 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     fnguard.isobj(sess, cfg, tree, node, namespace).isfn(fn);
 
     accumasync.arrf(objarr || [], [], (obj, prev, next) => {
-      o.retopt(sess, cfg, tree, obj, namespace, opts, (err, value)  => {
+      o.retopt(sess, cfg, tree, obj, namespace, opts, (err, value) => {
         if (err) return fn(err);
 
         prev.push(value);
         setTimeout(x => next(null, prev));
-      });        
+      });
     }, fn);
   };
 
   o.retregexp = (sess, cfg, tree, node, namespace, opts, fn) => {
     fnguard.isobj(sess, cfg, tree, node, namespace, opts).isfn(fn);
-    
+
     fn(null, new RegExp(opts.value));
   };
 
-  o.retliteral = (sess, cfg, tree, node, namespace, opts, fn) =>
-    fn(null, opts.value);
+  o.retliteral = (sess, cfg, tree, node, namespace, opts, fn) => fn(null, opts.value);
 
-  o.retthis = (sess, cfg, tree, node, namespace, opts, fn) =>
-    fn(null, node);
+  o.retthis = (sess, cfg, tree, node, namespace, opts, fn) => fn(null, node);
 
-  o.retopts = (sess, cfg, tree, node, namespace, opts, fn) =>
-    fn(null, opts);
+  o.retopts = (sess, cfg, tree, node, namespace, opts, fn) => fn(null, opts);
 
   // page may represent a data set from which subject data is defined.
   // in this case, page may be null for unselected multioption page object.
@@ -328,8 +290,7 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   o.retopt = (sess, cfg, tree, node, namespace, opts, fn) => {
     fnguard.isobj(sess, cfg, tree).isany(namespace, opts, node).isfn(fn);
 
-    if (/string|number|boolean/.test(typeof opts)
-        || (opts && opts.spread)) {
+    if (/^string|number/.test(typeof opts) || opts && opts.spread) {
       return fn(null, opts);
     } else if (!opts) {
       return fn(null, null);
@@ -337,8 +298,8 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
 
     o.getspecfn(opts.type)(sess, cfg, tree, node, namespace, opts, (err, res) => {
       if (err) return fn(err);
-      
-      o.getfiltered(sess, cfg, tree, res, res, opts.filterarr, fn);
+
+      o.getfiltered(sess, cfg, tree, node, res, opts.filterarr, fn);
     });
   };
 
@@ -358,17 +319,15 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   // **slow**
   o.retDataWHERE = (sess, cfg, tree, node, basearr = [], namespace, query, fn) => {
     fnguard.isobj(sess, cfg, tree, namespace, query).isfn(fn);
-    
+
     let keyarr = query.activeKeyArr || [],
         baseKey = query.baseKey,
-        casttype = basearr.length
-          ? typeof basearr[0]
-          : 'string';
+        casttype = basearr.length ? typeof basearr[0] : 'string';
 
     if (casttype !== 'string' && castas[casttype]) {
       keyarr = keyarr.map(key => castas[casttype](key));
     }
-    
+
     accumasync.arr(basearr, [], (obj, prev, next) => {
       o.retopt(sess, cfg, tree, node, obj, baseKey, (err, value) => {
         if (err) return fn(err);
@@ -378,7 +337,7 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
         }
 
         setTimeout(x => next(null, prev));
-      });        
+      });
     }, fn);
   };
 
@@ -416,36 +375,31 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   // filters a user added valu
   //
   // applies a series of mutations to a value...
-  o.applyfilterarr = (sess, cfg, tree, obj, namespace, filterarr, fn) => {
-    fnguard.isobj(sess, cfg, tree, obj).isany(namespace, filterarr).isfn(fn);
+  o.applyfilterarr = (sess, cfg, tree, node, namespace, filterarr, fn) => {
+    fnguard.isobj(sess, cfg, tree, node).isany(namespace, filterarr).isfn(fn);
 
-    accumasync.arrf(filterarr || [], obj, (filteropt, prev, next) => (
-      o.retopt(sess, cfg, tree, prev, namespace, filteropt, (err, val) => (
-        // accumulates filtered value on 'val'
-        next(null, Object.assign({}, prev, {val}))
-      ))
-    ), fn);      
+    accumasync.arrf(filterarr || [], namespace, (filteropt, prev, next) => o.retopt(sess, cfg, tree, node, prev, filteropt, (err, val) => next(null, Object.assign({}, prev, { val }))), (err, { val }) => fn(err, val));
   };
 
   o.whenAND = (sess, cfg, tree, node, namespace, whenarr, fn) => {
     fnguard.isobj(sess, cfg, tree, node).isany(namespace).isfn(fn);
 
-    (function next (x, len) {
+    (function next(x, len) {
       if (x >= len) return fn(null, null); // no errors
 
       o.geterror(sess, cfg, tree, node, namespace, whenarr[x], (err, errMsg) => {
         if (err) return fn(err);
         if (errMsg) return fn(null, errMsg);
-        
+
         next(++x, len);
       });
-    }(0, whenarr.length));
+    })(0, whenarr.length);
   };
 
   o.whenOR = (sess, cfg, tree, node, namespace, whenarr, fn) => {
     fnguard.isobj(sess, cfg, tree, node).isany(namespace).isfn(fn);
 
-    (function next (x, len, errorMessage) {
+    (function next(x, len, errorMessage) {
       if (x >= len) return fn(null, errorMessage);
       o.geterror(sess, cfg, tree, node, namespace, whenarr[x], (err, errMsg) => {
         if (err) return fn(err);
@@ -455,14 +409,14 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
           fn(null, null); // no error message -passing.
         }
       });
-    }(0, whenarr.length));
+    })(0, whenarr.length);
   };
 
   o.geterror = (sess, cfg, traph, node, namespace, spec, fn) => {
     fnguard.isobj(sess, cfg, traph, spec, namespace).isfn(fn);
     const type = spec.type,
           ANDRe = /^AND$/i,
-          ORRe  = /^OR$/i;
+          ORRe = /^OR$/i;
 
     if (ANDRe.test(type)) {
       o.whenAND(sess, cfg, traph, node, namespace, spec.whenarr, fn);
@@ -472,8 +426,7 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
       o.getopts(sess, cfg, traph, node, namespace, spec, (err, options) => {
         if (err) return fn(err);
 
-        if (o.getfn(spec.fnname)(
-          o.getargs(traph, node, spec, namespace), options, sess, cfg, traph, node)) {
+        if (o.getfn(spec.fnname)(o.getargs(traph, node, spec, namespace), options, sess, cfg, traph, node)) {
           fn(null, null);
         } else {
           fn(null, spec.errkey || 'errkey');
@@ -482,12 +435,12 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     }
   };
 
-  o.getpass = (sess, cfg, traph, node, namespace, spec, value, fn) =>
-    o.geterror(sess, cfg, traph, node, namespace, spec, value, (err, errmsg) => {
-      if (err || errmsg) return fn(err, errmsg, false);
+  o.getpass = (sess, cfg, traph, node, namespace, spec, value, fn) => o.geterror(sess, cfg, traph, node, namespace, spec, value, (err, errmsg) => {
+    if (err || errmsg) return fn(err, errmsg, false);
 
-      fn(null, null, true);
-    });
+    fn(null, null, true);
+  });
 
   return o;
+  
 };

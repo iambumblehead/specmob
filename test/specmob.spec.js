@@ -1,5 +1,5 @@
 // Filename: specmob.spec.js  
-// Timestamp: 2017.01.27-15:03:50 (last modified)
+// Timestamp: 2017.02.17-10:25:25 (last modified)
 // Author(s): bumblehead <chris@bumblehead.com>
 
 const specmob = require('../'),
@@ -321,52 +321,58 @@ describe("specmob.retDataWHERE", () => {
 
 describe("specmob.applySpecFilters", () => {
   it("should apply a sequence of filters", (done) => {
+
+    namespaceo.val = '55';
+    
     specmob({}, {
       strip : ([val], opts, sess, cfg, graph, node) =>
-          node[opts.propname].trim(),
+        String(val).trim(),
       tonum : ([val], opts, sess, cfg, graph, node) =>
-         +node[opts.propname],
+         +val,
       add5 : ([val], opts, sess, cfg, graph, node) =>
-         node[opts.propname] + 5
-    }).applyfilterarr(sesso, cfgo, grapho, {val : ' 55 '}, namespaceo, [{
+         val + 5
+      }).getfiltered(sesso, cfgo, grapho, nodeo, namespaceo, [{
       type : "fn",
       fnname : 'strip',
-      options : { propname : 'val' }
+      argprops : ['val']
     },{
       type : "fn",
       fnname : 'tonum',
-      options : { propname : 'val' }
+      argprops : ['val']
     },{
       type : "fn",
       fnname : 'add5',
-      options : { propname : 'val' }
+      argprops : ['val']
     }], (err, res) => {
-      expect(res.val).toBe(60);
+      
+      
+      expect(res).toBe(60);
       
       done();
     });
   });
 });
 
-describe("specmob.retfn", () => {
-  it("should ret a function value", (done) => {
-    var opts = {
-      type : "fn",
-      fnname : "getmodifiedval"
+
+describe("specmob.getargs", () => {
+  it("should return dynamic args", () => {
+
+    let spec = {
+      argprops : [
+        "actionframe",
+        "modeldata.type"
+      ]
     };
 
-    var node = {
-      world : 'world'
-    };    
+    let namespace = {
+      actionframe : "actionframe",
+      modeldata : { type : "actionframe" }
+    };
     
-    specmob({}, {
-      getmodifiedval : ([val], opts, sess, cfg, graph, node) => (
-        node.world + 'modified'
-      )
-    }).retfn(sesso, cfgo, grapho, node, namespaceo, opts, (err, res) => {
-      expect(res).toBe('worldmodified');
-      done();
-    });
+    let args = specmob().getargs({}, {}, spec, namespace);
+
+    expect(args[0]).toBe('actionframe');
+    expect(args[1]).toBe('actionframe');
   });
 });
 
@@ -392,3 +398,24 @@ describe("specmob.retfn", () => {
   });
 });
 
+describe("specmob.retfn", () => {
+  it("should ret a function value", (done) => {
+    var opts = {
+      type : "fn",
+      fnname : "getmodifiedval"
+    };
+
+    var node = {
+      world : 'world'
+    };    
+    
+    specmob({}, {
+      getmodifiedval : ([val], opts, sess, cfg, graph, node) => (
+        node.world + 'modified'
+      )
+    }).retfn(sesso, cfgo, grapho, node, namespaceo, opts, (err, res) => {
+      expect(res).toBe('worldmodified');
+      done();
+    });
+  });
+});

@@ -2,7 +2,10 @@ specmob
 =======
 **(c)[Bumblehead][0]**
 
-Return dynamic results from dsl patterns
+Return dynamic results from dsl patterns.
+
+Faster if using [setImmediate](https://www.npmjs.com/package/setimmediate).
+
 
 [0]: http://www.bumblehead.com                            "bumblehead"
 

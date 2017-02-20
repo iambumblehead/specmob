@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2017.02.18-20:52:06 (last modified)
+// Timestamp: 2017.02.19-13:52:37 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -10,6 +10,7 @@
 const fnguard = require('fnguard'),
       castas = require('castas'),
 
+      check = fnguard.spec,
       setImmediate = window.setImmediate || setTimeout;
 
 const specmob = module.exports = (cbObj, fnObj, o = {}) => { 
@@ -61,6 +62,26 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
 
   o.getspecfn = name => o.fn(o, 'ret'+(name||'opts'), 'spec');
 
+  o.isvalidspec = spec =>
+    check.isobj(spec);
+
+  o.isvalidspecprop = prop =>
+    check.isnum(prop) || check.isstr(prop);  
+
+  o.valfinish = (finval, spec, val) => {
+    if (spec.spread === true ||
+        spec.type === undefined ||
+        spec.type === 'opts') {
+      finval = Object.assign(finval, val);
+    } else {
+      finval[
+        o.isvalidspecprop(spec.name) ? spec.name : 'value'
+      ] = val;
+    }
+
+    return finval;
+  };
+  
   // convenience function to return current val or spec-generated 'defaultval'
   o.valordefaultval = (sess, cfg, graph, node, namespace, opts, val, fn) => {
     fnguard

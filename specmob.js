@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2017.02.19-13:52:37 (last modified)
+// Timestamp: 2017.02.21-07:31:42 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -11,7 +11,8 @@ const fnguard = require('fnguard'),
       castas = require('castas'),
 
       check = fnguard.spec,
-      setImmediate = window.setImmediate || setTimeout;
+      setImmediate =
+        (typeof window === 'object' ? window : this).setImmediate || setTimeout;
 
 const specmob = module.exports = (cbObj, fnObj, o = {}) => { 
 

@@ -2,12 +2,13 @@ specmob
 =======
 **(c)[Bumblehead][0]**
 
-Return dynamic results from dsl patterns.
-
-Faster if using [setImmediate](https://www.npmjs.com/package/setimmediate).
+Return dynamic results from dsl patterns. Environments using [setImmediate][1] will parse results faster.
 
 
 [0]: http://www.bumblehead.com                            "bumblehead"
+[1]: https://www.npmjs.com/package/setimmediate         "setimmediate"
+
+function type signatures are consistently the same so that instructions of different types can be parsed recursively in any combination
 
 
 ![scrounge](https://github.com/iambumblehead/scroungejs/raw/master/img/hand.png)

@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2017.02.26-17:58:28 (last modified)
+// Timestamp: 2017.02.26-18:44:14 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -369,15 +369,10 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   // 
   //  var query = {
   //    baseKey : baseKey,
-  //    activeKeyArr : activeKeyArr,
-  //    select : selectType // single or multiple
+  //    activeKeyArr : activeKeyArr
   //  };
   //
-  // if value and activeKey are not of same type, use baseKey.cast
-  // to obtain correct behaviour
-  //
-  // pushes entire baseobject into the final array whos value matches
-  // **slow**
+  // *slow* pushes entire baseobject into the final array whos value matches
   o.retDataWHERE = (sess, cfg, graph, node, basearr = [], namespace, query, fn) => {
     fnguard.isobj(sess, cfg, graph, namespace, query).isfn(fn);
     

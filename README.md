@@ -120,7 +120,7 @@ let callbacks = {
 };
 ```
 
-for applications using specmob, any functionality or result becomes possible using these values which may yield data from the user session or the state of the application (graph). because specmob uses recursion, these values are passed to each call regardless of depth.
+for applications using specmob, any functionality or result becomes possible using these values which may yield data from the user session or the state of the application (graph). because specmob carries the values recursively to each call.
 
 new forms can be defined on the interpreter at runtime to add support for new patterns. for example, adding support for the pattern of type "regexp". to add support define a new function named with _type_ prefixed by "ret".
 
@@ -167,6 +167,51 @@ specmobinterpreter.retopt(sess, cfg, graph, node, namespace, {
   console.log(res) // true
 });
 ```
+
+validation patterns can be used as well. if the validation fails it will return false and return an errkey if one is defined on the pattern,
+
+```javascript
+let callbacks = {},
+    functions = {
+      isstring : ([val], opts, sess, cfg, graph, node) =>
+        typeof val === 'string',
+
+      isgtlength : ([val], opts, sess, cfg, graph, node) =>
+        (String(val).length - 1) >= opts.length
+    };
+    
+let specmobinterpreter = specmob(callbacks, functions);
+
+specmobinterpreter.getpass(sess, cfg, graph, node, {
+  testvalue : 'notlong'
+}, {
+  type : 'AND',
+  whenarr : [{
+    type : 'OR',
+    errkey : 'notstringornumber',
+    whenarr : [{
+      type : 'fn',
+      fnname : 'isstring',
+      argprops : ['testvalue']
+    },{
+      type : 'fn',
+      fnname : 'isnumber',
+      argprops : ['testvalue']
+    }]
+  },{
+    type : 'fn',
+    fnname : 'isgtlength',
+    options : { length : 10 },
+    argprops : ['testvalue'],
+    errkey : 'notlongenough'
+  }]
+}, (err, errkey, ispass) => {
+
+  console.log(ispass, errkey); // false 'notlongenough'
+
+});
+```
+
 
 
 

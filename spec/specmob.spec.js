@@ -1,5 +1,5 @@
 // Filename: specmob.spec.js  
-// Timestamp: 2017.02.26-17:57:06 (last modified)
+// Timestamp: 2017.02.26-19:12:55 (last modified)
 // Author(s): bumblehead <chris@bumblehead.com>
 
 const specmob = require('../'),
@@ -620,4 +620,142 @@ describe('specmob.retregexp', () => {
     });
     
   })
+});
+
+
+describe('specmob.getpass( sess, cfg, graph, node, namespace, spec, fn )', () => {
+  
+  it('should evaluate `true` for a pattern that is true', (done) => {
+    let callbacks = {},
+        functions = {
+          isstring : ([val], opts, sess, cfg, graph, node) =>
+            typeof val === 'string',
+          
+          isgtlength : ([val], opts, sess, cfg, graph, node) =>
+            (String(val).length - 1) >= opts.length
+        };
+    
+    let specmobinterpreter = specmob(callbacks, functions);
+
+    specmobinterpreter.getpass(sess, cfg, graph, node, {
+      testvalue : 'testvalue'
+    }, {
+      type : 'AND',
+      whenarr : [{
+        type : 'OR',
+        errkey : 'notstringornumber',
+        whenarr : [{        
+          type : 'fn',
+          fnname : 'isstring',
+          argprops : ['testvalue']
+        },{
+          type : 'fn',
+          fnname : 'isnumber',
+          argprops : ['testvalue']          
+        }]
+      },{
+        type : 'fn',
+        fnname : 'isgtlength',
+        options : { length : 4 },
+        argprops : ['testvalue'],
+        errkey : 'notlongenough'
+      }]
+    }, (err, errmsg, ispass) => {
+
+      expect( ispass ).toBe( true );
+      done();
+      
+    });
+    
+  });
+
+
+  it('should evaluate `false` for a pattern that is false', (done) => {
+    let callbacks = {},
+        functions = {
+          isstring : ([val], opts, sess, cfg, graph, node) =>
+            typeof val === 'string',
+          
+          isgtlength : ([val], opts, sess, cfg, graph, node) =>
+            (String(val).length - 1) >= opts.length
+        };
+    
+    let specmobinterpreter = specmob(callbacks, functions);
+
+    specmobinterpreter.getpass(sess, cfg, graph, node, {
+      testvalue : 'sm'
+    }, {
+      type : 'AND',
+      whenarr : [{
+        type : 'OR',
+        errkey : 'notstringornumber',
+        whenarr : [{        
+          type : 'fn',
+          fnname : 'isstring',
+          argprops : ['testvalue']
+        },{
+          type : 'fn',
+          fnname : 'isnumber',
+          argprops : ['testvalue']          
+        }]
+      },{
+        type : 'fn',
+        fnname : 'isgtlength',
+        options : { length : 4 },
+        argprops : ['testvalue'],
+        errkey : 'notlongenough'
+      }]
+    }, (err, errmsg, ispass) => {
+
+      expect( ispass ).toBe( false );
+      done();
+
+    });
+    
+  });
+
+
+  it('should return given errkey (if defined) for pattern that evaluates `false`', (done) => {
+    let callbacks = {},
+        functions = {
+          isstring : ([val], opts, sess, cfg, graph, node) =>
+            typeof val === 'string',
+          
+          isgtlength : ([val], opts, sess, cfg, graph, node) =>
+            (String(val).length - 1) >= opts.length
+        };
+    
+    let specmobinterpreter = specmob(callbacks, functions);
+
+    specmobinterpreter.getpass(sess, cfg, graph, node, {
+      testvalue : 'notlong'
+    }, {
+      type : 'AND',
+      whenarr : [{
+        type : 'OR',
+        errkey : 'notstringornumber',
+        whenarr : [{        
+          type : 'fn',
+          fnname : 'isstring',
+          argprops : ['testvalue']
+        },{
+          type : 'fn',
+          fnname : 'isnumber',
+          argprops : ['testvalue']          
+        }]
+      },{
+        type : 'fn',
+        fnname : 'isgtlength',
+        options : { length : 10 },
+        argprops : ['testvalue'],
+        errkey : 'notlongenough'
+      }]
+    }, (err, errkey, ispass) => {
+
+      expect( errkey ).toBe( 'notlongenough' );
+      done();
+
+    });
+    
+  });    
 });

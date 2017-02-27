@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2017.02.26-05:42:36 (last modified)
+// Timestamp: 2017.02.26-17:58:28 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -194,10 +194,6 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     fnguard.isobj(sess, cfg, graph, node, opts).isany(namespace)
       .isnotundefined(opts.propname).isfn(fn);
     
-    // if nodepath
-    //   optain property from other node if node
-    // else
-    //   use current node
     o.valordefaultval(sess, cfg, graph, node, namespace, opts, (
       o.objlookup(opts.propname, namespace)
     ), fn);
@@ -340,21 +336,12 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     }(0, opts.optarr.length, opts.optarr, []));
   };
 
-  o.retregexp = (sess, cfg, graph, node, namespace, opts, fn) => {
-    fnguard.isobj(sess, cfg, graph, node, namespace, opts).isfn(fn);
-    
-    fn(null, new RegExp(opts.value));
-  };
-
   o.retliteral = (sess, cfg, graph, node, namespace, opts, fn) =>
     fn(null, opts.value);
 
   o.retopts = (sess, cfg, graph, node, namespace, opts, fn) =>
     fn(null, opts);
 
-  // page may represent a data set from which subject data is defined.
-  // in this case, page may be null for unselected multioption page object.
-  //
   // valid default types:
   //   regexp, this,
   //   objprop, cb,

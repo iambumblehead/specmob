@@ -1,5 +1,5 @@
 // Filename: specmob.spec.js  
-// Timestamp: 2017.02.26-05:47:10 (last modified)
+// Timestamp: 2017.02.26-17:57:06 (last modified)
 // Author(s): bumblehead <chris@bumblehead.com>
 
 const specmob = require('../'),
@@ -532,6 +532,92 @@ describe('specmob.applyfilterarr( sess, cfg, graph, node, namespace, filterarr, 
       
       done();
     });
+    
   });
 });
 
+describe('specmob.applyfilterarr( sess, cfg, graph, node, namespace, filterarr, fn )', () => {
+  it('should apply a sequence of filters', (done) => {
+
+    specmob({
+      requestmonthlyhoroscope : ([val], opts, fn) => (
+        // maybe this returns a service communication...
+        opts.thismonth % 2
+          ? fn(null, 'you have good luck this month!')
+          : fn(null, 'you have okay luck this month!')
+      )
+    }, {
+      getdate : ([val], opts) =>
+        new Date(), 
+      
+      getmonthfromdate : ([val], opts) => {
+        let month = opts.date.getMonth() + 1;
+
+        return opts.format === 'mm'
+          ? ('0' + month).slice(-2) // 0 padded
+          : month;
+      }
+    }).retopt(sess, cfg, graph, node, namespace, {
+      optarr : [{
+        optarr : [{
+          format : 'mm'
+        },{
+          type : 'fn',
+          fnname : 'getdate',
+          name : 'date'
+        }],
+        type : 'fn',
+        fnname : 'getmonthfromdate',
+        name :  'monthnumber'
+      }],
+      type : 'cb',
+      cbname : 'requestmonthlyhoroscope',
+      name :  'horoscope'
+    }, (err, res) => {
+
+      expect(res.startsWith('you have ')).toBe(true);
+      
+      done();
+    });
+    
+  });
+});
+
+describe('specmob.retregexp', () => {
+  
+  it('should allow for the definition and usage of the "regexp" pattern', (done) => {
+
+    let callbacks = {},
+        functions = {
+          isregexp : ([val], opts, sess, cfg, graph, node) =>
+            opts.re.test(opts.string)
+        };
+    
+    let specmobinterpreter = specmob(callbacks, functions);
+
+    specmobinterpreter.retregexp = (sess, cfg, graph, node, namespace, opts, fn) => {
+      fn(null, new RegExp(opts.value, opts.modifiers));
+    };
+
+    specmobinterpreter.retopt(sess, cfg, graph, node, namespace, {
+      optarr : [{
+        type : 'regexp',
+        value : '^hello',
+        modifiers : '',        
+        name : 're'
+      },{
+        type : 'literal',
+        value : 'hello at beginning of string',
+        name : 'string'
+      }],
+      type : 'fn',
+      fnname : 'isregexp'
+    }, (err, res) => {
+
+      expect(res).toBe(true);
+
+      done();
+    });
+    
+  })
+});

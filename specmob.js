@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2017.02.26-18:44:14 (last modified)
+// Timestamp: 2017.03.12-15:43:21 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -246,7 +246,7 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
       if (err) return fn(err);
 
       let args = o.getargs(graph, node, opts, namespace);
-      
+
       o.getcb(opts.cbname)(args, options, (err, fin) => {
         if (err) return fn(err);
 
@@ -276,7 +276,7 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   //   }
   //
   o.retobj = (sess, cfg, graph, node, namespace, opt, fn) => {
-    fnguard.isobj(sess, cfg, graph, node, namespace).isfn(fn);
+    fnguard.isobj(sess, cfg, graph, node).isany(namespace).isfn(fn);
 
     let optarr = Array.isArray(opt) ? opt : (opt || {}).optarr || [];
 
@@ -432,6 +432,7 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
     fnguard.isobj(sess, cfg, graph, node, spec).isany(namespace).isfn(fn);
 
     if (spec.optarr) {
+
       o.retobj(sess, cfg, graph, node, namespace, spec, (err, options) => {
         // copy to spec.options if exists
         //

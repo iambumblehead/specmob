@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2017.04.12-12:40:23 (last modified)
+// Timestamp: 2017.05.10-20:39:14 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -284,8 +284,8 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
       o.throw_valisnotarray(graph, node, optarr);
     }
 
-    (function next (x, specarr, resobj) {
-      if (!x--) return fn(null, resobj);
+    (function next (x, len, specarr, resobj) {
+      if (x >= len) return fn(null, resobj); // no errors
       
       o.retopt(sess, cfg, graph, node, namespace, specarr[x], (err, val) => {
         if (err) return fn(err);
@@ -296,9 +296,9 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
           resobj[specarr[x].name || 'value'] = val;
         }
 
-        setImmediate(e => next(x, specarr, resobj));
+        setImmediate(e => next(++x, len,  specarr, resobj));
       });
-    }(optarr.length, optarr, {}));
+    }(0, optarr.length, optarr, {}));
   };
   
   // create an array, with multiple elements, dynamically constructed

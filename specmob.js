@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2017.05.10-20:39:14 (last modified)
+// Timestamp: 2017.05.15-14:51:11 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -13,7 +13,7 @@ const fnguard = require('fnguard'),
       win = (typeof window === 'object' ? window : this),
       setImmediate = win.setImmediate || setTimeout;
 
-const specmob = module.exports = (cbObj, fnObj, o = {}) => { 
+const specmob = module.exports = ({speccb, specfn, specerrfn}, o = {}) => { 
 
   o.fn = (obj, name, type) => {
     if (name in obj && typeof obj[name] === 'function') {
@@ -29,6 +29,59 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
   o.stringify = obj =>
     (/string|boolean|number/.test(typeof obj)
      ? obj : JSON.stringify(obj, null, '  '));
+
+
+  o.specerr = ({
+    isfatal=true,
+    errtype='error',
+    errmsg='errmsg',
+    meta}) => ({
+      isfatal,
+      errtype,
+      errmsg,
+      meta
+    });
+
+  o.isspecerr = err => Boolean(
+    typeof err === 'object' && err &&
+      typeof err.errtype === 'string');
+  
+  // err may be,
+  //  * pre-populated err object
+  //  * instance of Error
+  //  * string
+  //
+  // returns populated err object
+  o.geterr = err => {
+    if (o.isspecerr(err)) {
+      err = o.specerr(err);
+    } else if (err instanceof Error) {
+      err = o.specerr({
+        errmsg : err.message,
+        meta : err
+      });
+    } else if (typeof err === 'string') {
+      err = o.specerr({
+        errmsg : err,
+        meta : { err }
+      });
+    }
+
+    return err;
+  };
+
+  // if err follows standard format,
+  //    emit to specerrfn
+  // else
+  //    throw error(err)
+  //
+  // return err
+  o.emiterr = (sess, cfg, graph, node, err) => (
+    console.log('err is', err),
+    o.isspecerr(err) 
+      ? specerrfn(sess, cfg, graph, node, err)
+      : o.thrownode(graph, node, 'invalid error', err),
+    err);  
   
   o.throw = (...args) => {
     console.error('[!!!] specmob: ', ...args);
@@ -56,10 +109,10 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
       '[!!!] must be an array: ' + o.stringify(opts)));
 
   // return the named callback from cbobj, and name
-  o.getcb = name => o.fn(cbObj, name, 'cbfn');
+  o.getcb = name => o.fn(speccb, name, 'cbfn');
 
   // return the named function from fnfobj, and name
-  o.getfn = name => o.fn(fnObj, name, 'fnfn');
+  o.getfn = name => o.fn(specfn, name, 'fnfn');
 
   // return the named spec function from this namespace, and 'ret'+name
   //
@@ -248,7 +301,8 @@ const specmob = module.exports = (cbObj, fnObj, o = {}) => {
       let args = o.getargs(graph, node, opts, namespace);
 
       o.getcb(opts.cbname)(args, options, (err, fin) => {
-        if (err) return fn(err);
+        if (err && (err = o.emiterr(sess, cfg, graph, node, o.geterr(err))).isfatal)
+          return fn(err);
 
         o.valordefaultval(sess, cfg, graph, node, namespace, opts, fin, fn);        
       }, sess, cfg, graph, node);

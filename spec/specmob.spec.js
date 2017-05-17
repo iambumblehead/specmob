@@ -1,5 +1,5 @@
 // Filename: specmob.spec.js  
-// Timestamp: 2017.02.26-19:12:55 (last modified)
+// Timestamp: 2017.05.17-15:06:53 (last modified)
 // Author(s): bumblehead <chris@bumblehead.com>
 
 const specmob = require('../'),
@@ -21,7 +21,7 @@ describe('specmob.valfinish( cumval, spec, val )', () => {
         val = { valprop : 1 };
     
     let result = specmob().valfinish(cumval, spec, val);
-    
+
     expect( result.cumvalprop ).toBe( 1 );
     expect( result.valprop ).toBe( 1 );
   });
@@ -71,7 +71,7 @@ describe('specmob.valfinish( cumval, spec, val )', () => {
 describe('specmob.valfinish( sess, cfg, graph, node, namespace, opts, val, fn )', () => {
 
   it('should return value if it is not null or undefined', (done) => {    
-    specmob().valordefaultval(sess, cfg, graph, node, namespace, opts, 'value', (err, res) => {
+    specmob().valordefaultval(sess, cfg, graph, node, namespace, opts, 'value', (err, graph, res) => {
       expect( res ).toBe( 'value' );
 
       done();
@@ -79,7 +79,7 @@ describe('specmob.valfinish( sess, cfg, graph, node, namespace, opts, val, fn )'
   });
 
   it('should return value if it is null or undefined AND opts.defaultval is not defined', (done) => {    
-    specmob().valordefaultval(sess, cfg, graph, node, namespace, opts, null, (err, res) => {
+    specmob().valordefaultval(sess, cfg, graph, node, namespace, opts, null, (err, graph, res) => {
       expect( res ).toBe( null );
 
       done();
@@ -89,7 +89,7 @@ describe('specmob.valfinish( sess, cfg, graph, node, namespace, opts, val, fn )'
   it('should return value if it is not null or undefned and opts.defaultval is defined', (done) => {    
     specmob().valordefaultval(sess, cfg, graph, node, namespace, {
       defaultval : 'defultval'
-    }, 'value', (err, res) => {
+    }, 'value', (err, graph, res) => {
       expect( res ).toBe( 'value' );
 
       done();
@@ -99,7 +99,7 @@ describe('specmob.valfinish( sess, cfg, graph, node, namespace, opts, val, fn )'
   it('should return opts.defaultval when defined AND value is null or undefined', (done) => {    
     specmob().valordefaultval(sess, cfg, graph, node, namespace, {
       defaultval : 'defaultval'
-    }, null, (err, res) => {
+    }, null, (err, graph, res) => {
       expect( res ).toBe( 'defaultval' );
 
       done();
@@ -109,7 +109,7 @@ describe('specmob.valfinish( sess, cfg, graph, node, namespace, opts, val, fn )'
   it('should return opts.defaultval string definition', (done) => {    
     specmob().valordefaultval(sess, cfg, graph, node, namespace, {
       defaultval : 'defaultval'
-    }, null, (err, res) => {
+    }, null, (err, graph, res) => {
       expect( res ).toBe( 'defaultval' );
 
       done();
@@ -122,7 +122,7 @@ describe('specmob.valfinish( sess, cfg, graph, node, namespace, opts, val, fn )'
         type : 'literal',
         value : 'defaultval'
       }
-    }, null, (err, res) => {
+    }, null, (err, graph, res) => {
       expect( res ).toBe( 'defaultval' );
 
       done();
@@ -215,7 +215,7 @@ describe('specmob.retobjprop( sess, cfg, graph, node, namespace, opts, fn )', ()
     }, {
       type : 'objprop',
       propname : 'hello.my'
-    }, (err, res) => {
+    }, (err, graph, res) => {
       expect(res).toBe('world');
       done();
     });    
@@ -232,7 +232,7 @@ describe('specmob.retobjprop( sess, cfg, graph, node, namespace, opts, fn )', ()
         type : 'literal',
         value : 'defaultworld'
       }
-    }, (err, res) => {
+    }, (err, graph, res) => {
       expect(res).toBe('defaultworld');
       done();
     });    
@@ -245,7 +245,7 @@ describe('specmob.retobjprop( sess, cfg, graph, node, namespace, opts, fn )', ()
       type : 'objprop',
       propname : 'hello.0',
       name : 'myprop'
-    }, (err, res) => {
+    }, (err, graph, res) => {
       expect(res).toBe('world');
       done();
     });    
@@ -253,19 +253,22 @@ describe('specmob.retobjprop( sess, cfg, graph, node, namespace, opts, fn )', ()
 });
 
 describe('specmob.retfn( sess, cfg, graph, node, namespace, opts, fn )', () => {
+
   it('should return a function value', (done) => {
 
-    specmob({}, {
-      getmodifiedval : ([val], opts, sess, cfg, graph, node) => (
-        val + 'modified'
-      )
+    specmob({
+      specfn : {
+        getmodifiedval : ([val], opts, sess, cfg, graph, node) => (
+          val + 'modified'
+        )
+      }
     }).retfn(sess, cfg, graph, node, {
       hello : 'world'
     }, {
       type : 'fn',
       fnname : 'getmodifiedval',
       argprops : ['hello']
-    }, (err, res) => {
+    }, (err, graph, res) => {
       expect(res).toBe('worldmodified');
       done();
     });
@@ -276,17 +279,19 @@ describe('specmob.retfn( sess, cfg, graph, node, namespace, opts, fn )', () => {
 
     expect(
       () =>
-        specmob({}, {
-          getmodifiedval : ([val], opts, sess, cfg, graph, node) => (
-            val + 'modified'
-          )
+        specmob({
+          specfn : {
+            getmodifiedval : ([val], opts, sess, cfg, graph, node) => (
+              val + 'modified'
+            )
+          }
         }).retfn(sess, cfg, graph, node, {
           hello : 'world'
         }, {
           type : 'fn',
           //fnname : 'getmodifiedval',
           argprops : ['hello']
-        }, (err, res) => {})
+        }, (err, graph, res) => {})
     ).toThrowError();
   });
 
@@ -294,7 +299,7 @@ describe('specmob.retfn( sess, cfg, graph, node, namespace, opts, fn )', () => {
 
     expect(
       () =>
-        specmob({}, {
+        specmob({
           //getmodifiedval : ([val], opts, sess, cfg, graph, node) => (
           //  val + 'modified'
           //)
@@ -304,51 +309,53 @@ describe('specmob.retfn( sess, cfg, graph, node, namespace, opts, fn )', () => {
           type : 'fn',
           fnname : 'getmodifiedval',
           argprops : ['hello']
-        }, (err, res) => {})
+        }, (err, graph, res) => {})
     ).toThrowError();
   });
-  
   
 });
 
 describe('specmob.retcb( sess, cfg, graph, node, namespace, opts, fn )', () => {
-  
+
   it('should return a callback value', (done) => {
     var node = {
       world : 'world'
     };    
     
     specmob({
-      getmodifiedval : ([val], opts, fn, sess, cfg, graph, node) => (
-        fn(null, val + 'modified')
-      )
-    }, {}).retcb(sess, cfg, graph, node, {
+      speccb : {
+        getmodifiedval : ([val], opts, fn, sess, cfg, graph, node) => (
+          fn(null, val + 'modified')
+        )
+      }
+    }).retcb(sess, cfg, graph, node, {
       hello : 'world'
     }, {
       type : 'cb',
       cbname : 'getmodifiedval',
       argprops : ['hello']
-    }, (err, res) => {
+    }, (err, graph, res) => {
       expect(res).toBe('worldmodified');
       done();
     });
   });
 
   it('should throw an error if named-property cbname is not present', () => {
-
     expect(
       () =>
         specmob({
-          getmodifiedval : ([val], opts, sess, cfg, graph, node) => (
-            val + 'modified'
-          )
-        },{}).retcb(sess, cfg, graph, node, {
+          speccb : {
+            getmodifiedval : ([val], opts, sess, cfg, graph, node) => (
+              val + 'modified'
+            )
+          }
+        }).retcb(sess, cfg, graph, node, {
           hello : 'world'
         }, {
           type : 'cb',
           //cbname : 'getmodifiedval',
           argprops : ['hello']
-        }, (err, res) => {})
+        }, (err, graph, res) => {})
     ).toThrowError();
   });
 
@@ -359,13 +366,13 @@ describe('specmob.retcb( sess, cfg, graph, node, namespace, opts, fn )', () => {
           //getmodifiedval : ([val], opts, sess, cfg, graph, node) => (
           //  val + 'modified'
           //)
-        },{}).retcb(sess, cfg, graph, node, {
+        }).retcb(sess, cfg, graph, node, {
           hello : 'world'
         }, {
           type : 'cb',
           cbname : 'getmodifiedval',
           argprops : ['hello']
-        }, (err, res) => {})
+        }, (err, graph, res) => {})
     ).toThrowError();
   });
   
@@ -380,7 +387,7 @@ describe('specmob.retobj( sess, cfg, graph, node, namespace, opts, fn )', () => 
       optarr : [{
         'myprop' : 'myvalue'
       }]
-    }, (err, res) => {
+    }, (err, graph, res) => {
       expect(res.myprop).toBe('myvalue');
       done();
     });
@@ -394,17 +401,19 @@ describe('specmob.retobj( sess, cfg, graph, node, namespace, opts, fn )', () => 
       },{
         myprop2 : 'myvalue2'
       }]
-    }, (err, res) => {    
+    }, (err, graph, res) => {    
       expect(res.myprop1 + res.myprop2).toBe('myvalue1myvalue2');
       done();
     });    
   });
   
   it('should obtain an array of values', (done) => {
-    specmob({}, {
-      getmodifiedval : ([val], opts, sess, cfg, graph, node) => (
-        val + 'modified'
-      )
+    specmob({
+      specfn : {
+        getmodifiedval : ([val], opts, sess, cfg, graph, node) => (
+          val + 'modified'
+        )
+      }
     }).retobj(sess, cfg, graph, node, {
       hello : 'world'
     }, [{
@@ -417,7 +426,7 @@ describe('specmob.retobj( sess, cfg, graph, node, namespace, opts, fn )', () => 
       value : 'worldliteral',
       name : 'literalval',
       argprops : ['hello']
-    }], (err, res) => {
+    }], (err, graph, res) => {
       
       expect(res.modifiedval).toBe('worldmodified');
       expect(res.literalval).toBe('worldliteral');
@@ -428,14 +437,16 @@ describe('specmob.retobj( sess, cfg, graph, node, namespace, opts, fn )', () => 
 });
 
 describe('specmob.retoptarr( sess, cfg, graph, node, namespace, opts, fn )', () => {
-  
+
   it('should return a new array of data from a set of dynamic patterns', (done) => {
 
-    specmob({}, {
-      gettuesday : (sess, cfg, graph, node, opts) => 
-        'tuesday',
-      getwednesday : (sess, cfg, graph, node, opts) =>
-        'wednesday'
+    specmob({
+      specfn : {
+        gettuesday : (sess, cfg, graph, node, opts) => 
+          'tuesday',
+        getwednesday : (sess, cfg, graph, node, opts) =>
+          'wednesday'
+      }
     }).retoptarr(sess, cfg, graph, node, namespace, {
       type : 'optarr',
       optarr : [{
@@ -445,7 +456,7 @@ describe('specmob.retoptarr( sess, cfg, graph, node, namespace, opts, fn )', () 
         type : 'fn',
         fnname : 'getwednesday'
       }]
-    }, (err, res) => {
+    }, (err, graph, res) => {
       expect(res[1]).toBe('wednesday');
       done();
     });    
@@ -456,7 +467,7 @@ describe('specmob.retDataWHERE( sess, cfg, graph, node, basearr, namespace, quer
 
   it('should obtain a query', (done) => {
     
-    specmob({}, {}).retDataWHERE(sess, cfg, graph, node, [{
+    specmob().retDataWHERE(sess, cfg, graph, node, [{
       type : 0,
       value : 'california'
     },{
@@ -471,7 +482,7 @@ describe('specmob.retDataWHERE( sess, cfg, graph, node, basearr, namespace, quer
         type : 'objprop',
         propname : 'type'
       }
-    }, (err, res) => {
+    }, (err, graph, res) => {
       expect(res[0].value).toBe('oregon');
       done();
     });
@@ -479,7 +490,7 @@ describe('specmob.retDataWHERE( sess, cfg, graph, node, basearr, namespace, quer
 
   it('should obtain a query for multiple values', (done) => {
     
-    specmob({}, {}).retDataWHERE(sess, cfg, graph, node, [{
+    specmob().retDataWHERE(sess, cfg, graph, node, [{
       type : 0,
       value : 'california'
     },{
@@ -494,7 +505,7 @@ describe('specmob.retDataWHERE( sess, cfg, graph, node, basearr, namespace, quer
         type : 'objprop',
         propname : 'type'
       }
-    }, (err, res) => {
+    }, (err, graph, res) => {
       expect(res[0].value).toBe('oregon');
       expect(res[1].value).toBe('california');
       done();
@@ -505,15 +516,18 @@ describe('specmob.retDataWHERE( sess, cfg, graph, node, basearr, namespace, quer
 
 
 describe('specmob.applyfilterarr( sess, cfg, graph, node, namespace, filterarr, fn )', () => {
+
   it('should apply a sequence of filters', (done) => {
 
-    specmob({}, {
-      strip : ([val], opts, sess, cfg, graph, node) =>
-        String(val).trim(),
-      tonum : ([val], opts, sess, cfg, graph, node) =>
-        +val,
-      add5 : ([val], opts, sess, cfg, graph, node) =>
-        val + 5
+    specmob({
+      specfn : {
+        strip : ([val], opts, sess, cfg, graph, node) =>
+          String(val).trim(),
+        tonum : ([val], opts, sess, cfg, graph, node) =>
+          +val,
+        add5 : ([val], opts, sess, cfg, graph, node) =>
+          val + 5
+      }
     }).getfiltered(sess, cfg, graph, node, { val : '55' }, [{
       type : 'fn',
       fnname : 'strip',
@@ -526,7 +540,7 @@ describe('specmob.applyfilterarr( sess, cfg, graph, node, namespace, filterarr, 
       type : 'fn',
       fnname : 'add5',
       argprops : ['val']
-    }], (err, res) => {
+    }], (err, graph, res) => {
       
       expect(res).toBe(60);
       
@@ -540,22 +554,26 @@ describe('specmob.applyfilterarr( sess, cfg, graph, node, namespace, filterarr, 
   it('should apply a sequence of filters', (done) => {
 
     specmob({
-      requestmonthlyhoroscope : ([val], opts, fn) => (
-        // maybe this returns a service communication...
-        opts.thismonth % 2
-          ? fn(null, 'you have good luck this month!')
-          : fn(null, 'you have okay luck this month!')
-      )
-    }, {
-      getdate : ([val], opts) =>
-        new Date(), 
+      speccb : {
+        requestmonthlyhoroscope : ([val], opts, fn) => (
+          // maybe this returns a service communication...
+          opts.thismonth % 2
+            ? fn(null, 'you have good luck this month!')
+            : fn(null, 'you have okay luck this month!')
+        )
+      },
       
-      getmonthfromdate : ([val], opts) => {
-        let month = opts.date.getMonth() + 1;
+      specfn : {
+        getdate : ([val], opts) =>
+          new Date(), 
+        
+        getmonthfromdate : ([val], opts) => {
+          let month = opts.date.getMonth() + 1;
 
-        return opts.format === 'mm'
-          ? ('0' + month).slice(-2) // 0 padded
-          : month;
+          return opts.format === 'mm'
+            ? ('0' + month).slice(-2) // 0 padded
+            : month;
+        }
       }
     }).retopt(sess, cfg, graph, node, namespace, {
       optarr : [{
@@ -573,7 +591,7 @@ describe('specmob.applyfilterarr( sess, cfg, graph, node, namespace, filterarr, 
       type : 'cb',
       cbname : 'requestmonthlyhoroscope',
       name :  'horoscope'
-    }, (err, res) => {
+    }, (err, graph, res) => {
 
       expect(res.startsWith('you have ')).toBe(true);
       
@@ -584,19 +602,19 @@ describe('specmob.applyfilterarr( sess, cfg, graph, node, namespace, filterarr, 
 });
 
 describe('specmob.retregexp', () => {
-  
+
   it('should allow for the definition and usage of the "regexp" pattern', (done) => {
 
-    let callbacks = {},
-        functions = {
+    let speccb = {},
+        specfn = {
           isregexp : ([val], opts, sess, cfg, graph, node) =>
             opts.re.test(opts.string)
         };
     
-    let specmobinterpreter = specmob(callbacks, functions);
+    let specmobinterpreter = specmob({speccb, specfn});
 
     specmobinterpreter.retregexp = (sess, cfg, graph, node, namespace, opts, fn) => {
-      fn(null, new RegExp(opts.value, opts.modifiers));
+      fn(null, graph, new RegExp(opts.value, opts.modifiers));
     };
 
     specmobinterpreter.retopt(sess, cfg, graph, node, namespace, {
@@ -612,7 +630,7 @@ describe('specmob.retregexp', () => {
       }],
       type : 'fn',
       fnname : 'isregexp'
-    }, (err, res) => {
+    }, (err, graph, res) => {
 
       expect(res).toBe(true);
 
@@ -624,10 +642,10 @@ describe('specmob.retregexp', () => {
 
 
 describe('specmob.getpass( sess, cfg, graph, node, namespace, spec, fn )', () => {
-  
+
   it('should evaluate `true` for a pattern that is true', (done) => {
-    let callbacks = {},
-        functions = {
+    let speccb = {},
+        specfn = {
           isstring : ([val], opts, sess, cfg, graph, node) =>
             typeof val === 'string',
           
@@ -635,7 +653,7 @@ describe('specmob.getpass( sess, cfg, graph, node, namespace, spec, fn )', () =>
             (String(val).length - 1) >= opts.length
         };
     
-    let specmobinterpreter = specmob(callbacks, functions);
+    let specmobinterpreter = specmob({speccb, specfn});
 
     specmobinterpreter.getpass(sess, cfg, graph, node, {
       testvalue : 'testvalue'
@@ -671,8 +689,8 @@ describe('specmob.getpass( sess, cfg, graph, node, namespace, spec, fn )', () =>
 
 
   it('should evaluate `false` for a pattern that is false', (done) => {
-    let callbacks = {},
-        functions = {
+    let speccb = {},
+        specfn = {
           isstring : ([val], opts, sess, cfg, graph, node) =>
             typeof val === 'string',
           
@@ -680,7 +698,7 @@ describe('specmob.getpass( sess, cfg, graph, node, namespace, spec, fn )', () =>
             (String(val).length - 1) >= opts.length
         };
     
-    let specmobinterpreter = specmob(callbacks, functions);
+    let specmobinterpreter = specmob({speccb, specfn});
 
     specmobinterpreter.getpass(sess, cfg, graph, node, {
       testvalue : 'sm'
@@ -716,8 +734,8 @@ describe('specmob.getpass( sess, cfg, graph, node, namespace, spec, fn )', () =>
 
 
   it('should return given errkey (if defined) for pattern that evaluates `false`', (done) => {
-    let callbacks = {},
-        functions = {
+    let speccb = {},
+        specfn = {
           isstring : ([val], opts, sess, cfg, graph, node) =>
             typeof val === 'string',
           
@@ -725,7 +743,7 @@ describe('specmob.getpass( sess, cfg, graph, node, namespace, spec, fn )', () =>
             (String(val).length - 1) >= opts.length
         };
     
-    let specmobinterpreter = specmob(callbacks, functions);
+    let specmobinterpreter = specmob({speccb,specfn});
 
     specmobinterpreter.getpass(sess, cfg, graph, node, {
       testvalue : 'notlong'
@@ -758,4 +776,5 @@ describe('specmob.getpass( sess, cfg, graph, node, namespace, spec, fn )', () =>
     });
     
   });    
+
 });

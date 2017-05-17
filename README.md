@@ -72,7 +72,7 @@ let callbacks = {
   )
 }
 
-let specmobinterpreter = specmob(callbacks, functions);
+let specmobinterpreter = specmob({speccb: callbacks, specfn: functions);
 ```
 
 all interpreter functions require the same six parameters and return results to a node-style callback _(err, res)_. some parameters may seem unnecessary and unusual but specmob is meant to be used within a larger program for which those parameters make sense. here's an example call,
@@ -94,7 +94,7 @@ specmobinterpreter.retopt(sess, cfg, graph, node, namespace, {
   type : 'cb',
   cbname : 'requestmonthlyhoroscope',
   name :  'horoscope'
-}, (err, result) => {
+}, (err, graph, result) => {
   
 })
 ```
@@ -125,7 +125,7 @@ for applications using specmob, any functionality or result becomes possible usi
 new forms can be defined on the interpreter at runtime to add support for new patterns. for example, adding support for the pattern of type "regexp". to add support define a new function named with _type_ prefixed by "ret".
 
 ```javascript
-let specmobinterpreter = specmob(callbacks, functions);
+let specmobinterpreter = specmob({speccb: callbacks, specfn: functions});
 
 specmobinterpreter.retregexp = (sess, cfg, graph, node, namespace, opts, fn) => {
   fn(null, new RegExp(opts.value, opts.modifier));
@@ -142,7 +142,7 @@ let callbacks = {},
     };
 
 // construct interpreter
-let specmobinterpreter = specmob(callbacks, functions);
+let specmobinterpreter = specmob({speccb: callbacks, specfn: functions});
 
 // define function new type "regexp" using the name "retregexp"
 specmobinterpreter.retregexp = (sess, cfg, graph, node, namespace, opts, fn) => {
@@ -163,7 +163,7 @@ specmobinterpreter.retopt(sess, cfg, graph, node, namespace, {
   }],
   type : 'fn',
   fnname : 'isregexp'
-}, (err, res) => {
+}, (err, graph, res) => {
   console.log(res) // true
 });
 ```
@@ -180,7 +180,7 @@ let callbacks = {},
         (String(val).length - 1) >= opts.length
     };
     
-let specmobinterpreter = specmob(callbacks, functions);
+let specmobinterpreter = specmob({speccb: callbacks, specfn: functions});
 
 specmobinterpreter.getpass(sess, cfg, graph, node, {
   testvalue : 'notlong'

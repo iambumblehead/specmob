@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2017.05.16-18:05:28 (last modified)
+// Timestamp: 2017.05.17-14:49:20 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -13,7 +13,7 @@ const fnguard = require('fnguard'),
       win = (typeof window === 'object' ? window : this),
       setImmediate = win.setImmediate || setTimeout;
 
-const specmob = module.exports = ({speccb, specfn, specerrfn}, o = {}) => { 
+const specmob = module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => { 
 
   o.fn = (obj, name, type) => {
     if (name in obj && typeof obj[name] === 'function') {

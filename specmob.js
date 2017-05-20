@@ -79,7 +79,7 @@ const specmob = module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
 
   o.emiterr = (sess, cfg, graph, node, err, val, fn, specerr) => 
     specerrfn(sess, cfg, graph, node, specerr = o.geterr(err), (err, graph) => {
-      if (!specerr.isfatal) fn(null, graph, val);
+      if (!specerr.isfatal) fn(null, val, graph);
     });
   
   o.throw = (...args) => {
@@ -162,7 +162,7 @@ const specmob = module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
          val === undefined) && opts.defaultval !== undefined) {
       o.retopt(sess, cfg, graph, node, namespace, opts.defaultval, fn);
     } else {
-      fn(null, graph, val);
+      fn(null, val, graph);
     }
   };
 
@@ -268,12 +268,12 @@ const specmob = module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
     fnguard.isobj(sess, cfg, graph, node, opts)
       .isany(namespace).isstr(opts.fnname).isfn(fn);
 
-    o.getopts(sess, cfg, graph, node, namespace, opts, (err, graph, options) => {
+    o.getopts(sess, cfg, graph, node, namespace, opts, (err, options, graph) => {
       if (err) return fn(err);
       
       let args = o.getargs(graph, node, opts, namespace, options);
 
-      o.callfn(sess, cfg, graph, node, args, options, opts, (err, graph, fin) => {
+      o.callfn(sess, cfg, graph, node, args, options, opts, (err, fin, graph) => {
         if (err) return fn(err);
 
         o.valordefaultval(sess, cfg, graph, node, namespace, opts, fin, fn);
@@ -291,7 +291,7 @@ const specmob = module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
 
     o.isinsterr(fin)
       ? o.emiterr(sess, cfg, graph, node, fin, fin, fn)
-      : fn(null, graph, fin);      
+      : fn(null, fin, graph);
   };  
 
   // return the value from the given callback
@@ -311,12 +311,12 @@ const specmob = module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
     fnguard.isobj(sess, cfg, graph, node, opts)
       .isany(namespace).isfn(fn);
 
-    o.getopts(sess, cfg, graph, node, namespace, opts, (err, graph, options) => {
+    o.getopts(sess, cfg, graph, node, namespace, opts, (err, options, graph) => {
       if (err) return fn(err);
 
       let args = o.getargs(graph, node, opts, namespace);
 
-      o.callcb(sess, cfg, graph, node, args, options, opts, (err, graph, fin) => {
+      o.callcb(sess, cfg, graph, node, args, options, opts, (err, fin, graph) => {
         if (err) return fn(err);
 
         o.valordefaultval(sess, cfg, graph, node, namespace, opts, fin, fn);        
@@ -333,7 +333,7 @@ const specmob = module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
     o.getcb(spec.cbname)(args, opts, (err, fin) => {
       err 
         ? o.emiterr(sess, cfg, graph, node, err, fin, fn)
-        : fn(null, graph, fin);
+        : fn(null, fin, graph);
     }, sess, cfg, graph, node);
   };
 
@@ -367,9 +367,9 @@ const specmob = module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
     }
 
     (function next (x, len, specarr, graph, resobj) {
-      if (x >= len) return fn(null, graph, resobj); // no errors
+      if (x >= len) return fn(null, resobj, graph); // no errors
       
-      o.retopt(sess, cfg, graph, node, namespace, specarr[x], (err, graph, val) => {
+      o.retopt(sess, cfg, graph, node, namespace, specarr[x], (err, val, graph) => {
         if (err) return fn(err);
 
         if (check.isobj(val)) {
@@ -406,9 +406,9 @@ const specmob = module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
     fnguard.isobj(sess, cfg, graph, node, namespace, opts).isfn(fn);
 
     (function next (x, len, specarr, graph, resarr) {
-      if (x >= len) return fn(null, graph, resarr); // no errors
+      if (x >= len) return fn(null, resarr, graph); // no errors
       
-      o.retopt(sess, cfg, graph, node, namespace, specarr[x], (err, graph, res) => {
+      o.retopt(sess, cfg, graph, node, namespace, specarr[x], (err, res, graph) => {
         if (err) return fn(err);
         
         resarr.push(res);
@@ -419,10 +419,10 @@ const specmob = module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
   };
 
   o.retliteral = (sess, cfg, graph, node, namespace, opts, fn) =>
-    fn(null, graph, opts.value);
+    fn(null, opts.value, graph);
 
   o.retopts = (sess, cfg, graph, node, namespace, opts, fn) =>
-    fn(null, graph, opts);
+    fn(null, opts, graph);
 
   // valid default types:
   //   regexp, this,
@@ -434,12 +434,12 @@ const specmob = module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
 
     if (/^string|number/.test(typeof opts)
         || (opts && opts.spread)) {
-      return fn(null, graph, opts);
+      return fn(null, opts, graph);
     } else if (!opts) {
-      return fn(null, graph, null);
+      return fn(null, null, graph);
     }
 
-    o.getspecfn(opts.type)(sess, cfg, graph, node, namespace, opts, (err, graph, res) => {
+    o.getspecfn(opts.type)(sess, cfg, graph, node, namespace, opts, (err, res, graph) => {
       if (err) return fn(err);
 
       o.getfiltered(sess, cfg, graph, node, res, opts.filterarr, fn);
@@ -469,9 +469,9 @@ const specmob = module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
     }
     
     (function next (x, basearr, graph, resarr, spec) {
-      if (!x--) return fn(null, graph, resarr);
+      if (!x--) return fn(null, resarr, graph);
       
-      o.retopt(sess, cfg, graph, node, basearr[x], baseKey, (err, graph, value) => {
+      o.retopt(sess, cfg, graph, node, basearr[x], baseKey, (err, value, graph) => {
         if (err) return fn(err);
         
         if (~keyarr.indexOf(value)) {
@@ -514,16 +514,16 @@ const specmob = module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
     fnguard.isobj(sess, cfg, graph, node, spec).isany(namespace).isfn(fn);
 
     if (spec.optarr) {
-      o.retobj(sess, cfg, graph, node, namespace, spec, (err, graph, options) => {
+      o.retobj(sess, cfg, graph, node, namespace, spec, (err, options, graph) => {
         // copy to spec.options if exists
         //
         // allows literal options to be defined alongside dynamically generated ones
-        fn(null, graph, Object.assign({}, spec.options || {}, options || {}));
+        fn(null, Object.assign({}, spec.options || {}, options || {}), graph);
       });
     } else if (spec.options) {
-      fn(null, graph, spec.options);
+      fn(null, spec.options, graph);
     } else {
-      fn(null, graph, {});
+      fn(null, {}, graph);
     }
   };
 
@@ -531,7 +531,7 @@ const specmob = module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
     if (Array.isArray(filterarr)) {
       o.applyfilterarr(sess, cfg, graph, node, namespace, filterarr, fn);
     } else {
-      fn(null, graph, namespace);
+      fn(null, namespace, graph);
     }
   };  
   
@@ -545,9 +545,9 @@ const specmob = module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
     filterarr = filterarr || [];
 
     (function next (filterarr, x, len, graph, prev) {
-      if (x >= len) return fn(null, graph, prev.val);
+      if (x >= len) return fn(null, prev.val, graph);
 
-      o.retopt(sess, cfg, graph, node, prev, filterarr[x], (err, graph, val) => {
+      o.retopt(sess, cfg, graph, node, prev, filterarr[x], (err, val, graph) => {
         if (err) return fn(err);
         
         next(filterarr, ++x, len, graph, Object.assign({}, prev, {val}));
@@ -597,7 +597,7 @@ const specmob = module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
     } else if (ORRe.test(type)) {
       o.whenOR(sess, cfg, graph, node, namespace, spec.whenarr, fn);
     } else {
-      o.getopts(sess, cfg, graph, node, namespace, spec, (err, graph, options) => {
+      o.getopts(sess, cfg, graph, node, namespace, spec, (err, options, graph) => {
         if (err) return fn(err);
         
         if (o.getfn(spec.fnname)(

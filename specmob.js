@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2017.05.19-06:25:10 (last modified)
+// Timestamp: 2017.05.30-02:36:03 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -461,19 +461,19 @@ const specmob = module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
     let keyarr = query.activeKeyArr || [],
         baseKey = query.baseKey,
         casttype = basearr.length
-          ? typeof (basearr[0] && basearr[0].key)
+          ? typeof (basearr[0] && basearr[0][baseKey.propname])
           : 'string';
 
     if (casttype !== 'string' && castas[casttype]) {
       keyarr = keyarr.map(key => castas[casttype](key));
     }
-    
+
     (function next (x, basearr, graph, resarr, spec) {
       if (!x--) return fn(null, resarr, graph);
-      
+
       o.retopt(sess, cfg, graph, node, basearr[x], baseKey, (err, value, graph) => {
         if (err) return fn(err);
-        
+
         if (~keyarr.indexOf(value)) {
           resarr.push(basearr[x]);
         }

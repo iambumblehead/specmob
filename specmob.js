@@ -23,8 +23,8 @@ const specmob = module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
     }
   };
 
-  o.getnodeuid = node =>
-    node && typeof node.get === 'function' && node.get('uid');  
+  o.getnodekey = node =>
+    node && typeof node.get === 'function' && node.get('key');  
 
   o.stringify = obj =>
     (/string|boolean|number/.test(typeof obj)
@@ -92,7 +92,7 @@ const specmob = module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
     win.errnode  = node;
     console.error('errgraph: ', graph && graph.toJS && graph.toJS());
     console.error('errnode: ', node && node.toJS && node.toJS());
-    o.throw(o.getnodeuid(node), ...args);
+    o.throw(o.getnodekey(node), ...args);
   };
 
   o.throw_returnundefined = (graph, node, namespace, opts) =>

@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2017.05.30-02:36:03 (last modified)
+// Timestamp: 2017.06.04-01:58:10 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -19,7 +19,7 @@ const specmob = module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
     if (name in obj && typeof obj[name] === 'function') {
       return obj[name];
     } else {
-      throw new Error('no '+type+': '+name);
+      throw new Error('no '+type+': “'+name+'”');
     }
   };
 
@@ -423,6 +423,9 @@ const specmob = module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
 
   o.retopts = (sess, cfg, graph, node, namespace, opts, fn) =>
     fn(null, opts, graph);
+
+  o.retthis = (sess, cfg, graph, node, namespace, opts, fn) =>
+    fn(null, namespace, graph);
 
   // valid default types:
   //   regexp, this,

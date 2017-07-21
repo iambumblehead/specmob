@@ -1,26 +1,26 @@
 {
   "name": "specmob",
-  "version": "0.4.2",
-  "license" : "MIT",
-  "main" : "specmob",
+  "version": "0.4.3",
+  "license": "MIT",
+  "main": "specmob",
   "readmeFilename": "README.md",
   "description": "return dynamic results from dsl patterns",
   "repository": {
     "type": "git",
     "url": "https://github.com/iambumblehead/specmob.git"
   },
-  "dependencies" : {
-    "castas" : "^0.0.2",
-    "fnguard" : "^0.6.2"
+  "dependencies": {
+    "castas": "^0.0.2",
+    "fnguard": "^0.6.2"
   },
-  "devDependencies" : {
+  "devDependencies": {
     "jasmine": "2.5.3",
     "jasmine-spec-reporter": "3.2.0"
   },
   "keywords": [
     "spec"
   ],
-  "scripts" : {
+  "scripts": {
     "test": "node node_modules/jasmine/bin/jasmine.js --verbose"
   }
 }

@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2017.06.04-01:58:10 (last modified)
+// Timestamp: 2017.07.21-14:33:01 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -15,6 +15,11 @@ const fnguard = require('fnguard'),
 
 const specmob = module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => { 
 
+  // namespace re
+  o.nsre = /^ns\./;
+
+  o.nsrm = str => str.replace(o.nsre, '');
+  
   o.fn = (obj, name, type) => {
     if (name in obj && typeof obj[name] === 'function') {
       return obj[name];
@@ -183,10 +188,12 @@ const specmob = module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
 
     if (arg === 'this') {
       argval = thisval;
-    } else if (typeof namespace === 'object' && namespace) {
-      argval = o.objlookup(arg, namespace);
+    } else if (o.nsre.test(arg)) {
+      argval = check.isobj(namespace)
+        ? o.objlookup(o.nsrm(arg), namespace)
+        : o.throw_namespaceundefined(graph, node, namespace, opts);
     } else {
-      o.throw_namespaceundefined(graph, node, namespace, opts);
+      argval = String(arg);
     }
 
     return argval;

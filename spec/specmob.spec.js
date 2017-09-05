@@ -1,5 +1,5 @@
 // Filename: specmob.spec.js  
-// Timestamp: 2017.05.17-15:06:53 (last modified)
+// Timestamp: 2017.09.04-23:21:27 (last modified)
 // Author(s): bumblehead <chris@bumblehead.com>
 
 const specmob = require('../'),
@@ -214,7 +214,7 @@ describe('specmob.retobjprop( sess, cfg, graph, node, namespace, opts, fn )', ()
       hello : { my : 'world' }
     }, {
       type : 'objprop',
-      propname : 'hello.my'
+      prop : 'hello.my'
     }, (err, res, graph) => {
       expect(res).toBe('world');
       done();
@@ -226,7 +226,7 @@ describe('specmob.retobjprop( sess, cfg, graph, node, namespace, opts, fn )', ()
       hello : {}
     }, {
       type : 'objprop',
-      propname : 'hello.my',
+      prop : 'hello.my',
       name : 'myprop',
       defaultval : {
         type : 'literal',
@@ -243,7 +243,7 @@ describe('specmob.retobjprop( sess, cfg, graph, node, namespace, opts, fn )', ()
       hello : ['world']
     }, {
       type : 'objprop',
-      propname : 'hello.0',
+      prop : 'hello.0',
       name : 'myprop'
     }, (err, res, graph) => {
       expect(res).toBe('world');
@@ -480,7 +480,7 @@ describe('specmob.retDataWHERE( sess, cfg, graph, node, basearr, namespace, quer
       activeKeyArr : [1],
       baseKey : {
         type : 'objprop',
-        propname : 'type'
+        prop : 'type'
       }
     }, (err, res, graph) => {
       expect(res[0].value).toBe('oregon');
@@ -503,7 +503,7 @@ describe('specmob.retDataWHERE( sess, cfg, graph, node, basearr, namespace, quer
       activeKeyArr : [1,0],
       baseKey : {
         type : 'objprop',
-        propname : 'type'
+        prop : 'type'
       }
     }, (err, res, graph) => {
       expect(res[0].value).toBe('oregon');

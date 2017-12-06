@@ -1,5 +1,5 @@
 // Filename: specmob.js  
-// Timestamp: 2017.09.05-00:20:10 (last modified)
+// Timestamp: 2017.12.06-09:00:28 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)  
 //
 // spec data directs the collection of values here.
@@ -234,10 +234,10 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
   //
   //   'world'
   //
-  o.objlookup = (nsstr, obj) => 
+  o.objlookup = (nsstr, obj) =>
     String(nsstr).split('.').reduce(
       (a, b) => a ? (b in a ? a[b] : a[Number(b)]) : null, obj);
-  
+
   // obtain a value from namespace given a property lookup string
   //
   // ex,
@@ -472,19 +472,23 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
     
     let keyarr = query.activeKeyArr || [],
         baseKey = query.baseKey,
-        casttype = basearr.length
-          ? typeof (basearr[0] && basearr[0][baseKey.prop])
-          : 'string';
+        casttype;
 
-    if (casttype !== 'string' && castas[casttype]) {
-      keyarr = keyarr.map(key => castas[casttype](key));
-    }
-
-    (function next (x, basearr, graph, resarr, spec) {
+    (function next (x, basearr, graph, resarr) {
       if (!x--) return fn(null, resarr, graph);
 
       o.retopt(sess, cfg, graph, node, basearr[x], baseKey, (err, value, graph) => {
         if (err) return fn(err);
+
+        if (!casttype) {
+          casttype = basearr.length
+            ? typeof (basearr[0] && basearr[0][baseKey.prop])
+            : 'string';
+
+          if (casttype !== 'string' && castas[casttype]) {
+            keyarr = keyarr.map(key => castas[casttype](key));
+          }
+        }
 
         if (~keyarr.indexOf(value)) {
           resarr.push(basearr[x]);

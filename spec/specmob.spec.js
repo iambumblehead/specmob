@@ -1,5 +1,5 @@
 // Filename: specmob.spec.js  
-// Timestamp: 2017.09.04-23:21:27 (last modified)
+// Timestamp: 2017.12.06-09:15:13 (last modified)
 // Author(s): bumblehead <chris@bumblehead.com>
 
 const specmob = require('../'),
@@ -64,14 +64,14 @@ describe('specmob.valfinish( cumval, spec, val )', () => {
     expect( result.cumvalprop ).toBe( 1 );
     expect( result.name ).toBe( 1 );
   });  
-  
+
 });
 
 
 describe('specmob.valfinish( sess, cfg, graph, node, namespace, opts, val, fn )', () => {
 
   it('should return value if it is not null or undefined', (done) => {    
-    specmob().valordefaultval(sess, cfg, graph, node, namespace, opts, 'value', (err, res, graph) => {
+    specmob().valordefval(sess, cfg, graph, node, namespace, opts, 'value', (err, res, graph) => {
       expect( res ).toBe( 'value' );
 
       done();
@@ -79,7 +79,7 @@ describe('specmob.valfinish( sess, cfg, graph, node, namespace, opts, val, fn )'
   });
 
   it('should return value if it is null or undefined AND opts.defaultval is not defined', (done) => {    
-    specmob().valordefaultval(sess, cfg, graph, node, namespace, opts, null, (err, res, graph) => {
+    specmob().valordefval(sess, cfg, graph, node, namespace, opts, null, (err, res, graph) => {
       expect( res ).toBe( null );
 
       done();
@@ -87,43 +87,43 @@ describe('specmob.valfinish( sess, cfg, graph, node, namespace, opts, val, fn )'
   });
 
   it('should return value if it is not null or undefned and opts.defaultval is defined', (done) => {    
-    specmob().valordefaultval(sess, cfg, graph, node, namespace, {
-      defaultval : 'defultval'
+    specmob().valordefval(sess, cfg, graph, node, namespace, {
+      def : 'defultval'
     }, 'value', (err, res, graph) => {
       expect( res ).toBe( 'value' );
 
       done();
     });
-  });  
+  });
 
-  it('should return opts.defaultval when defined AND value is null or undefined', (done) => {    
-    specmob().valordefaultval(sess, cfg, graph, node, namespace, {
-      defaultval : 'defaultval'
+  it('should return opts.def when defined AND value is null or undefined', (done) => {    
+    specmob().valordefval(sess, cfg, graph, node, namespace, {
+      def : 'def'
     }, null, (err, res, graph) => {
-      expect( res ).toBe( 'defaultval' );
+      expect( res ).toBe( 'def' );
 
       done();
     });
   });
 
-  it('should return opts.defaultval string definition', (done) => {    
-    specmob().valordefaultval(sess, cfg, graph, node, namespace, {
-      defaultval : 'defaultval'
+  it('should return opts.def string definition', (done) => {    
+    specmob().valordefval(sess, cfg, graph, node, namespace, {
+      def : 'def'
     }, null, (err, res, graph) => {
-      expect( res ).toBe( 'defaultval' );
+      expect( res ).toBe( 'def' );
 
       done();
     });
   });
 
-  it('should return opts.defaultval spec definition', (done) => {    
-    specmob().valordefaultval(sess, cfg, graph, node, namespace, {
-      defaultval : {
+  it('should return opts.def spec definition', (done) => {    
+    specmob().valordefval(sess, cfg, graph, node, namespace, {
+      def : {
         type : 'literal',
-        value : 'defaultval'
+        value : 'def'
       }
     }, null, (err, res, graph) => {
-      expect( res ).toBe( 'defaultval' );
+      expect( res ).toBe( 'def' );
 
       done();
     });
@@ -131,27 +131,33 @@ describe('specmob.valfinish( sess, cfg, graph, node, namespace, opts, val, fn )'
   
 });
 
-describe('specmob.getnamespaceargval( graph, node, opts, namespace, thisval, arg )', () => {
+describe('specmob.getnsargval( graph, node, opts, namespace, thisval, arg )', () => {
 
   it('should return thisval, when arg is "this"', () => {
     expect(
-      specmob().getnamespaceargval( graph, node, opts, namespace, 'thisval', 'this')
+      specmob().getnsargval( graph, node, opts, namespace, 'thisval', 'this')
     ).toBe( 'thisval' );
   });
 
   it('should return property lookup from namespace, when arg is not "this"', () => {
     expect(
-      specmob().getnamespaceargval( graph, node, opts, { hello : 'world' }, 'thisval', 'hello')
+      specmob().getnsargval( graph, node, opts, { hello : 'world' }, 'thisval', 'ns.hello')
     ).toBe( 'world' );
   });
+
+  it('should return "string", when arg is not "string"', () => {
+    expect(
+      specmob().getnsargval( graph, node, opts, { hello : 'world' }, 'thisval', 'string')
+    ).toBe( 'string' );
+  });  
 
   it('should throw an error if namespace is not defined and arg is not "this"', () => {
     expect(
       () =>
-        specmob().getnamespaceargval( graph, node, opts, null, 'thisval', 'hello')
+        specmob().getnsargval( graph, node, opts, null, 'thisval', 'ns.hello')
     ).toThrowError( );
   });
-  
+
 });
 
 describe('specmob.getargs( graph, node, opts, namespace, thisval, arg )', () => {
@@ -159,7 +165,7 @@ describe('specmob.getargs( graph, node, opts, namespace, thisval, arg )', () => 
   it('should return a list of args from the given namespace', () => {
 
     let args = specmob().getargs( graph, node, {
-      argprops : ['prop1', 'prop2', 'this']
+      argprops : ['ns.prop1', 'ns.prop2', 'this']
     }, {
       prop1 : 'val1',
       prop2 : 'val2'
@@ -173,7 +179,7 @@ describe('specmob.getargs( graph, node, opts, namespace, thisval, arg )', () => 
 
   it('should return dynamic args', () => {    
     let args = specmob().getargs(sess, cfg, {
-      argprops : ['actionframe', 'modeldata.type']
+      argprops : ['ns.actionframe', 'ns.modeldata.type']
     }, {
       actionframe : 'actionframe',
       modeldata : { type : 'actionframe' }
@@ -221,14 +227,14 @@ describe('specmob.retobjprop( sess, cfg, graph, node, namespace, opts, fn )', ()
     });    
   });
 
-  it('should return a opts.defaultval if defined and object property is null or undefined from the given namespace', (done) => {
+  it('should return a opts.def if defined and object property is null or undefined from the given namespace', (done) => {
     specmob().retobjprop(sess, cfg, graph, node, {
       hello : {}
     }, {
       type : 'objprop',
       prop : 'hello.my',
       name : 'myprop',
-      defaultval : {
+      def : {
         type : 'literal',
         value : 'defaultworld'
       }
@@ -267,7 +273,7 @@ describe('specmob.retfn( sess, cfg, graph, node, namespace, opts, fn )', () => {
     }, {
       type : 'fn',
       fnname : 'getmodifiedval',
-      argprops : ['hello']
+      argprops : ['ns.hello']
     }, (err, res, graph) => {
       expect(res).toBe('worldmodified');
       done();
@@ -290,7 +296,7 @@ describe('specmob.retfn( sess, cfg, graph, node, namespace, opts, fn )', () => {
         }, {
           type : 'fn',
           //fnname : 'getmodifiedval',
-          argprops : ['hello']
+          argprops : ['ns.hello']
         }, (err, res, graph) => {})
     ).toThrowError();
   });
@@ -308,7 +314,7 @@ describe('specmob.retfn( sess, cfg, graph, node, namespace, opts, fn )', () => {
         }, {
           type : 'fn',
           fnname : 'getmodifiedval',
-          argprops : ['hello']
+          argprops : ['ns.hello']
         }, (err, res, graph) => {})
     ).toThrowError();
   });
@@ -333,7 +339,7 @@ describe('specmob.retcb( sess, cfg, graph, node, namespace, opts, fn )', () => {
     }, {
       type : 'cb',
       cbname : 'getmodifiedval',
-      argprops : ['hello']
+      argprops : ['ns.hello']
     }, (err, res, graph) => {
       expect(res).toBe('worldmodified');
       done();
@@ -354,7 +360,7 @@ describe('specmob.retcb( sess, cfg, graph, node, namespace, opts, fn )', () => {
         }, {
           type : 'cb',
           //cbname : 'getmodifiedval',
-          argprops : ['hello']
+          argprops : ['ns.hello']
         }, (err, res, graph) => {})
     ).toThrowError();
   });
@@ -371,7 +377,7 @@ describe('specmob.retcb( sess, cfg, graph, node, namespace, opts, fn )', () => {
         }, {
           type : 'cb',
           cbname : 'getmodifiedval',
-          argprops : ['hello']
+          argprops : ['ns.hello']
         }, (err, res, graph) => {})
     ).toThrowError();
   });
@@ -406,7 +412,7 @@ describe('specmob.retobj( sess, cfg, graph, node, namespace, opts, fn )', () => 
       done();
     });    
   });
-  
+
   it('should obtain an array of values', (done) => {
     specmob({
       specfn : {
@@ -420,12 +426,12 @@ describe('specmob.retobj( sess, cfg, graph, node, namespace, opts, fn )', () => 
       type : 'fn',
       fnname : 'getmodifiedval',
       name : 'modifiedval',
-      argprops : ['hello']
+      argprops : ['ns.hello']
     },{
       type : 'literal',
       value : 'worldliteral',
       name : 'literalval',
-      argprops : ['hello']
+      argprops : ['ns.hello']
     }], (err, res, graph) => {
       
       expect(res.modifiedval).toBe('worldmodified');
@@ -531,15 +537,15 @@ describe('specmob.applyfilterarr( sess, cfg, graph, node, namespace, filterarr, 
     }).getfiltered(sess, cfg, graph, node, { val : '55' }, [{
       type : 'fn',
       fnname : 'strip',
-      argprops : ['val']
+      argprops : ['ns.val']
     },{
       type : 'fn',
       fnname : 'tonum',
-      argprops : ['val']
+      argprops : ['ns.val']
     },{
       type : 'fn',
       fnname : 'add5',
-      argprops : ['val']
+      argprops : ['ns.val']
     }], (err, res, graph) => {
       
       expect(res).toBe(60);
@@ -551,6 +557,7 @@ describe('specmob.applyfilterarr( sess, cfg, graph, node, namespace, filterarr, 
 });
 
 describe('specmob.applyfilterarr( sess, cfg, graph, node, namespace, filterarr, fn )', () => {
+
   it('should apply a sequence of filters', (done) => {
 
     specmob({
@@ -568,8 +575,6 @@ describe('specmob.applyfilterarr( sess, cfg, graph, node, namespace, filterarr, 
           new Date(), 
         
         getmonthfromdate : ([val], opts) => {
-          console.log('opts and val', val, opts);
-          
           let month = opts.date.getMonth() + 1;
 
           return opts.format === 'mm'
@@ -689,7 +694,7 @@ describe('specmob.getpass( sess, cfg, graph, node, namespace, spec, fn )', () =>
     
   });
 
-
+  /*    
   it('should evaluate `false` for a pattern that is false', (done) => {
     let speccb = {},
         specfn = {
@@ -778,5 +783,5 @@ describe('specmob.getpass( sess, cfg, graph, node, namespace, spec, fn )', () =>
     });
     
   });    
-
+*/
 });

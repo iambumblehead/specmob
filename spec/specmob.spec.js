@@ -1,5 +1,5 @@
 // Filename: specmob.spec.js  
-// Timestamp: 2017.12.06-09:15:13 (last modified)
+// Timestamp: 2017.12.06-10:06:42 (last modified)
 // Author(s): bumblehead <chris@bumblehead.com>
 
 const specmob = require('../'),
@@ -694,7 +694,7 @@ describe('specmob.getpass( sess, cfg, graph, node, namespace, spec, fn )', () =>
     
   });
 
-  /*    
+
   it('should evaluate `false` for a pattern that is false', (done) => {
     let speccb = {},
         specfn = {
@@ -717,17 +717,17 @@ describe('specmob.getpass( sess, cfg, graph, node, namespace, spec, fn )', () =>
         whenarr : [{        
           type : 'fn',
           fnname : 'isstring',
-          argprops : ['testvalue']
+          argprops : ['ns.testvalue']
         },{
           type : 'fn',
           fnname : 'isnumber',
-          argprops : ['testvalue']          
+          argprops : ['ns.testvalue']          
         }]
       },{
         type : 'fn',
         fnname : 'isgtlength',
         options : { length : 4 },
-        argprops : ['testvalue'],
+        argprops : ['ns.testvalue'],
         errkey : 'notlongenough'
       }]
     }, (err, errmsg, ispass) => {
@@ -762,17 +762,17 @@ describe('specmob.getpass( sess, cfg, graph, node, namespace, spec, fn )', () =>
         whenarr : [{        
           type : 'fn',
           fnname : 'isstring',
-          argprops : ['testvalue']
+          argprops : ['ns.testvalue']
         },{
           type : 'fn',
           fnname : 'isnumber',
-          argprops : ['testvalue']          
+          argprops : ['ns.testvalue']          
         }]
       },{
         type : 'fn',
         fnname : 'isgtlength',
         options : { length : 10 },
-        argprops : ['testvalue'],
+        argprops : ['ns.testvalue'],
         errkey : 'notlongenough'
       }]
     }, (err, errkey, ispass) => {
@@ -783,5 +783,5 @@ describe('specmob.getpass( sess, cfg, graph, node, namespace, spec, fn )', () =>
     });
     
   });    
-*/
+
 });

@@ -1,6 +1,6 @@
-// Filename: specmob.js  
+// Filename: specmob.js
 // Timestamp: 2017.12.06-09:00:28 (last modified)
-// Author(s): Bumblehead (www.bumblehead.com)  
+// Author(s): Bumblehead (www.bumblehead.com)
 //
 // spec data directs the collection of values here.
 //
@@ -15,39 +15,38 @@ const fnguard = require('fnguard'),
       win = (typeof window === 'object' ? window : this),
       setImmediate = win.setImmediate || setTimeout;
 
-module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => { 
-
+module.exports = ({ speccb, specfn, specerrfn } = {}, o = {}) => {
   // namespace re
   o.nsre = /^ns\./;
 
   o.nsrm = str => str.replace(o.nsre, '');
-  
+
   o.fn = (obj, name, type) => {
     if (name in obj && typeof obj[name] === 'function') {
       return obj[name];
-    } else {
-      throw new Error('no '+type+': “'+name+'”');
     }
+
+    throw new Error(`no ${type}: “${name}”`);
   };
 
   o.getnodekey = node =>
-    node && typeof node.get === 'function' && node.get('key');  
+    node && typeof node.get === 'function' && node.get('key');
 
   o.stringify = obj =>
     (/string|boolean|number/.test(typeof obj)
-     ? obj : JSON.stringify(obj, null, '  '));
+      ? obj : JSON.stringify(obj, null, '  '));
 
 
   o.specerr = ({
-    isfatal=true,
-    errtype='error',
-    errmsg='errmsg',
-    meta}) => ({
-      isfatal,
-      errtype,
-      errmsg,
-      meta
-    });
+    isfatal = true,
+    errtype = 'error',
+    errmsg = 'errmsg',
+    meta }) => ({
+    isfatal,
+    errtype,
+    errmsg,
+    meta
+  });
 
   o.isspecerr = err => Boolean(
     typeof err === 'object' && err &&
@@ -59,7 +58,7 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
   o.isgraph = graph => Boolean(
     typeof graph === 'object' && graph &&
       typeof graph.has === 'function');
-  
+
   // err may be,
   //  * pre-populated err object
   //  * instance of Error
@@ -84,11 +83,11 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
     return err;
   };
 
-  o.emiterr = (sess, cfg, graph, node, err, val, fn, specerr) => 
+  o.emiterr = (sess, cfg, graph, node, err, val, fn, specerr) =>
     specerrfn(sess, cfg, graph, node, specerr = o.geterr(err), (err, graph) => {
       if (!specerr.isfatal) fn(null, val, graph);
     });
-  
+
   o.throw = (...args) => {
     console.error('[!!!] specmob: ', ...args);
     throw new Error(...args);
@@ -96,7 +95,7 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
 
   o.thrownode = (graph, node, ...args) => {
     win.errgraph = graph;
-    win.errnode  = node;
+    win.errnode = node;
     console.error('errgraph: ', graph && graph.toJS && graph.toJS());
     console.error('errnode: ', node && node.toJS && node.toJS());
     o.throw(o.getnodekey(node), ...args);
@@ -104,15 +103,15 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
 
   o.throw_returnundefined = (graph, node, ns, opts) =>
     o.thrownode(graph, node, (
-      '[!!!] final spec results must not be not be `undefined`: ' + o.stringify(opts)));
+      `[!!!] final spec results must not be not be "undefined": ${o.stringify(opts)}`));
 
   o.throw_namespaceundefined = (graph, node, ns, opts) =>
     o.thrownode(graph, node, (
-      '[!!!] arg namespace must not be `undefined`: ' + o.stringify(opts)));
+      `[!!!] arg namespace must not be "undefined": ${o.stringify(opts)}`));
 
   o.throw_valisnotarray = (graph, node, opts) =>
     o.thrownode(graph, node, (
-      '[!!!] must be an array: ' + o.stringify(opts)));
+      `[!!!] must be an array: ${o.stringify(opts)}`));
 
   // return the named callback from cbobj, and name
   o.getcb = name => o.fn(speccb, name, 'cbfn');
@@ -130,13 +129,13 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
   //
   //   o.retobjprop
   //
-  o.getspecfn = name => o.fn(o, 'ret'+(name||'opts'), 'spec');
+  o.getspecfn = name => o.fn(o, `ret${(name || 'opts')}`, 'spec');
 
   o.isvalidspec = spec =>
     check.isobj(spec);
 
   o.isvalidspecprop = prop =>
-    check.isnum(prop) || check.isstr(prop);  
+    check.isnum(prop) || check.isstr(prop);
 
   // when multiple values are constructed seperately and used to compose a
   // single object definition, the specification for a value may be used here
@@ -208,7 +207,7 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
   // ex,
   //
   //   {
-  //     argprops : ['prop1', 'prop2', 'this']
+  //     args : ['prop1', 'prop2', 'this']
   //   }
   //
   //   {
@@ -221,7 +220,7 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
   //   ['val1', 'val2', { prop1 : 'val1', prop2 :'val2' }]
   //
   o.getargs = (graph, node, opts, ns) =>
-    opts.argprops ? opts.argprops.map(prop => (
+    opts.args ? opts.args.map(prop => (
       o.getnsargval(graph, node, opts, ns, ns, prop))) : [];
 
   // return the value defined on the given namespace or null
@@ -254,7 +253,7 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
   o.retobjprop = (sess, cfg, graph, node, ns, opts, fn) => {
     fnguard.isobj(sess, cfg, graph, node, opts).isany(ns)
       .isnotundefined(opts.prop).isfn(fn);
-    
+
     o.valordefval(sess, cfg, graph, node, ns, opts, (
       o.objlookup(opts.prop, ns)
     ), fn);
@@ -267,7 +266,7 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
   //   {
   //     type : "fn",
   //     fnname : "getdatenow"
-  //   }  
+  //   }
   //
   // return,
   //
@@ -279,7 +278,7 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
 
     o.getopts(sess, cfg, graph, node, ns, opts, (err, options, graph) => {
       if (err) return fn(err);
-      
+
       let args = o.getargs(graph, node, opts, ns, options);
 
       o.callfn(sess, cfg, graph, node, args, options, opts, (err, fin, graph) => {
@@ -298,10 +297,10 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
   o.callfn = (sess, cfg, graph, node, args, opts, spec, fn) => {
     let fin = o.getfn(spec.fnname)(args, opts, sess, cfg, graph, node);
 
-    o.isinsterr(fin)
+    return o.isinsterr(fin)
       ? o.emiterr(sess, cfg, graph, node, fin, fin, fn)
       : fn(null, fin, graph);
-  };  
+  };
 
   // return the value from the given callback
   //
@@ -310,12 +309,12 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
   //   {
   //     type : "cb",
   //     cbname : "requestdatenowfromservice"
-  //   }  
+  //   }
   //
   // return,
   //
   //   1488110309443
-  //  
+  //
   o.retcb = (sess, cfg, graph, node, ns, opts, fn) => {
     fnguard.isobj(sess, cfg, graph, node, opts)
       .isany(ns).isfn(fn);
@@ -328,7 +327,7 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
       o.callcb(sess, cfg, graph, node, args, options, opts, (err, fin, graph) => {
         if (err) return fn(err);
 
-        o.valordefval(sess, cfg, graph, node, ns, opts, fin, fn);        
+        o.valordefval(sess, cfg, graph, node, ns, opts, fin, fn);
       });
     });
   };
@@ -339,11 +338,11 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
   //       cb: (args, opts, fn, sess, cfg, graph, node)
   //
   o.callcb = (sess, cfg, graph, node, args, opts, spec, fn) => {
-    o.getcb(spec.cbname)(args, opts, (err, fin) => {
-      err 
+    o.getcb(spec.cbname)(args, opts, (err, fin) => (
+      err
         ? o.emiterr(sess, cfg, graph, node, err, fin, fn)
-        : fn(null, fin, graph);
-    }, sess, cfg, graph, node);
+        : fn(null, fin, graph)
+    ), sess, cfg, graph, node);
   };
 
   // create an object, with multiple named-properties, dynamically constructed
@@ -377,7 +376,7 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
 
     (function next (x, len, specarr, graph, resobj) {
       if (x >= len) return fn(null, resobj, graph); // no errors
-      
+
       o.retopt(sess, cfg, graph, node, ns, specarr[x], (err, val, graph) => {
         if (err) return fn(err);
 
@@ -387,18 +386,18 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
           resobj[specarr[x].name || 'value'] = val;
         }
 
-        setImmediate(e => next(++x, len, specarr, graph, resobj));
+        setImmediate(() => next(++x, len, specarr, graph, resobj));
       });
     }(0, optarr.length, optarr, graph, {}));
   };
-  
+
   // create an array, with multiple elements, dynamically constructed
   //
   // ex,
   //
   //   {
   //     type : "optarr",
-  //     optarr : [{  
+  //     optarr : [{
   //       type : "fn",
   //       fnname : "gettuesday"
   //     },{
@@ -416,12 +415,12 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
 
     (function next (x, len, specarr, graph, resarr) {
       if (x >= len) return fn(null, resarr, graph); // no errors
-      
+
       o.retopt(sess, cfg, graph, node, ns, specarr[x], (err, res, graph) => {
         if (err) return fn(err);
-        
+
         resarr.push(res);
-        
+
         next(++x, len, specarr, graph, resarr);
       });
     }(0, opts.optarr.length, opts.optarr, graph, []));
@@ -460,7 +459,7 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
 
   // baseData where key returns a match w/ an activeKey value
   // are returned in an array
-  // 
+  //
   //  var query = {
   //    baseKey : baseKey,
   //    activeKeyArr : activeKeyArr
@@ -469,9 +468,9 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
   // *slow* pushes entire baseobject into the final array whos value matches
   o.retDataWHERE = (sess, cfg, graph, node, basearr = [], ns, query, fn) => {
     fnguard.isobj(sess, cfg, graph, ns, query).isfn(fn);
-    
+
     let keyarr = query.activeKeyArr || [],
-        baseKey = query.baseKey,
+        { baseKey } = query,
         casttype;
 
     (function next (x, basearr, graph, resarr) {
@@ -494,7 +493,7 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
           resarr.push(basearr[x]);
         }
 
-        setImmediate(e => next(x, basearr, graph, resarr));
+        setImmediate(() => next(x, basearr, graph, resarr));
       });
     }(basearr.length, basearr, graph, []));
   };
@@ -549,8 +548,8 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
     } else {
       fn(null, ns, graph);
     }
-  };  
-  
+  };
+
   // for things like filtering out a base value to display a formatted value,
   //
   // applies a series of mutations to a value...
@@ -565,9 +564,9 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
 
       o.retopt(sess, cfg, graph, node, prev, filterarr[x], (err, val, graph) => {
         if (err) return fn(err);
-        
-        next(filterarr, ++x, len, graph, Object.assign({}, prev, {val}));
-      })      
+
+        next(filterarr, ++x, len, graph, Object.assign({}, prev, { val }));
+      });
     }(filterarr, 0, filterarr.length, graph, ns));
   };
 
@@ -580,7 +579,7 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
       o.geterror(sess, cfg, graph, node, ns, whenarr[x], (err, errMsg) => {
         if (err) return fn(err);
         if (errMsg) return fn(null, errMsg);
-        
+
         next(++x, len);
       });
     }(0, whenarr.length));
@@ -604,9 +603,9 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
 
   o.geterror = (sess, cfg, graph, node, ns, spec, fn) => {
     fnguard.isobj(sess, cfg, graph, spec, ns).isfn(fn);
-    const type = spec.type,
+    const { type } = spec,
           ANDRe = /^AND$/i,
-          ORRe  = /^OR$/i;
+          ORRe = /^OR$/i;
 
     if (ANDRe.test(type)) {
       o.whenAND(sess, cfg, graph, node, ns, spec.whenarr, fn);
@@ -615,7 +614,7 @@ module.exports = ({speccb, specfn, specerrfn}={}, o = {}) => {
     } else {
       o.getopts(sess, cfg, graph, node, ns, spec, (err, options, graph) => {
         if (err) return fn(err);
-        
+
         if (o.getfn(spec.fnname)(
           o.getargs(graph, node, spec, ns), options, sess, cfg, graph, node)) {
           fn(null, null);

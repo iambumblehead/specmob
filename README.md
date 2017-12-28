@@ -2,6 +2,8 @@ specmob
 =======
 **(c)[Bumblehead][0]**
 
+[![Build Status](https://travis-ci.org/iambumblehead/specmob.svg?branch=master)](https://travis-ci.org/iambumblehead/specmob)
+
 Return dynamic results from dsl patterns. Environments using [setImmediate][1] will parse results faster.
 
 specmob functions use patterns to generate results. for example, this simple pattern would result as 'world',
@@ -192,17 +194,17 @@ specmobinterpreter.getpass(sess, cfg, graph, node, {
     whenarr : [{
       type : 'fn',
       fnname : 'isstring',
-      argprops : ['testvalue']
+      args : ['testvalue']
     },{
       type : 'fn',
       fnname : 'isnumber',
-      argprops : ['testvalue']
+      args : ['testvalue']
     }]
   },{
     type : 'fn',
     fnname : 'isgtlength',
     options : { length : 10 },
-    argprops : ['testvalue'],
+    args : ['testvalue'],
     errkey : 'notlongenough'
   }]
 }, (err, errkey, ispass) => {

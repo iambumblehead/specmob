@@ -165,7 +165,7 @@ describe('specmob.getargs( graph, node, opts, namespace, thisval, arg )', () => 
   it('should return a list of args from the given namespace', () => {
 
     let args = specmob().getargs( graph, node, {
-      argprops : ['ns.prop1', 'ns.prop2', 'this']
+      args : ['ns.prop1', 'ns.prop2', 'this']
     }, {
       prop1 : 'val1',
       prop2 : 'val2'
@@ -179,7 +179,7 @@ describe('specmob.getargs( graph, node, opts, namespace, thisval, arg )', () => 
 
   it('should return dynamic args', () => {    
     let args = specmob().getargs(sess, cfg, {
-      argprops : ['ns.actionframe', 'ns.modeldata.type']
+      args : ['ns.actionframe', 'ns.modeldata.type']
     }, {
       actionframe : 'actionframe',
       modeldata : { type : 'actionframe' }
@@ -273,7 +273,7 @@ describe('specmob.retfn( sess, cfg, graph, node, namespace, opts, fn )', () => {
     }, {
       type : 'fn',
       fnname : 'getmodifiedval',
-      argprops : ['ns.hello']
+      args : ['ns.hello']
     }, (err, res, graph) => {
       expect(res).toBe('worldmodified');
       done();
@@ -296,7 +296,7 @@ describe('specmob.retfn( sess, cfg, graph, node, namespace, opts, fn )', () => {
         }, {
           type : 'fn',
           //fnname : 'getmodifiedval',
-          argprops : ['ns.hello']
+          args : ['ns.hello']
         }, (err, res, graph) => {})
     ).toThrowError();
   });
@@ -314,7 +314,7 @@ describe('specmob.retfn( sess, cfg, graph, node, namespace, opts, fn )', () => {
         }, {
           type : 'fn',
           fnname : 'getmodifiedval',
-          argprops : ['ns.hello']
+          args : ['ns.hello']
         }, (err, res, graph) => {})
     ).toThrowError();
   });
@@ -339,7 +339,7 @@ describe('specmob.retcb( sess, cfg, graph, node, namespace, opts, fn )', () => {
     }, {
       type : 'cb',
       cbname : 'getmodifiedval',
-      argprops : ['ns.hello']
+      args : ['ns.hello']
     }, (err, res, graph) => {
       expect(res).toBe('worldmodified');
       done();
@@ -360,7 +360,7 @@ describe('specmob.retcb( sess, cfg, graph, node, namespace, opts, fn )', () => {
         }, {
           type : 'cb',
           //cbname : 'getmodifiedval',
-          argprops : ['ns.hello']
+          args : ['ns.hello']
         }, (err, res, graph) => {})
     ).toThrowError();
   });
@@ -377,7 +377,7 @@ describe('specmob.retcb( sess, cfg, graph, node, namespace, opts, fn )', () => {
         }, {
           type : 'cb',
           cbname : 'getmodifiedval',
-          argprops : ['ns.hello']
+          args : ['ns.hello']
         }, (err, res, graph) => {})
     ).toThrowError();
   });
@@ -426,12 +426,12 @@ describe('specmob.retobj( sess, cfg, graph, node, namespace, opts, fn )', () => 
       type : 'fn',
       fnname : 'getmodifiedval',
       name : 'modifiedval',
-      argprops : ['ns.hello']
+      args : ['ns.hello']
     },{
       type : 'literal',
       value : 'worldliteral',
       name : 'literalval',
-      argprops : ['ns.hello']
+      args : ['ns.hello']
     }], (err, res, graph) => {
       
       expect(res.modifiedval).toBe('worldmodified');
@@ -537,15 +537,15 @@ describe('specmob.applyfilterarr( sess, cfg, graph, node, namespace, filterarr, 
     }).getfiltered(sess, cfg, graph, node, { val : '55' }, [{
       type : 'fn',
       fnname : 'strip',
-      argprops : ['ns.val']
+      args : ['ns.val']
     },{
       type : 'fn',
       fnname : 'tonum',
-      argprops : ['ns.val']
+      args : ['ns.val']
     },{
       type : 'fn',
       fnname : 'add5',
-      argprops : ['ns.val']
+      args : ['ns.val']
     }], (err, res, graph) => {
       
       expect(res).toBe(60);
@@ -672,17 +672,17 @@ describe('specmob.getpass( sess, cfg, graph, node, namespace, spec, fn )', () =>
         whenarr : [{        
           type : 'fn',
           fnname : 'isstring',
-          argprops : ['testvalue']
+          args : ['testvalue']
         },{
           type : 'fn',
           fnname : 'isnumber',
-          argprops : ['testvalue']          
+          args : ['testvalue']          
         }]
       },{
         type : 'fn',
         fnname : 'isgtlength',
         options : { length : 4 },
-        argprops : ['testvalue'],
+        args : ['testvalue'],
         errkey : 'notlongenough'
       }]
     }, (err, errmsg, ispass) => {
@@ -717,17 +717,17 @@ describe('specmob.getpass( sess, cfg, graph, node, namespace, spec, fn )', () =>
         whenarr : [{        
           type : 'fn',
           fnname : 'isstring',
-          argprops : ['ns.testvalue']
+          args : ['ns.testvalue']
         },{
           type : 'fn',
           fnname : 'isnumber',
-          argprops : ['ns.testvalue']          
+          args : ['ns.testvalue']          
         }]
       },{
         type : 'fn',
         fnname : 'isgtlength',
         options : { length : 4 },
-        argprops : ['ns.testvalue'],
+        args : ['ns.testvalue'],
         errkey : 'notlongenough'
       }]
     }, (err, errmsg, ispass) => {
@@ -762,17 +762,17 @@ describe('specmob.getpass( sess, cfg, graph, node, namespace, spec, fn )', () =>
         whenarr : [{        
           type : 'fn',
           fnname : 'isstring',
-          argprops : ['ns.testvalue']
+          args : ['ns.testvalue']
         },{
           type : 'fn',
           fnname : 'isnumber',
-          argprops : ['ns.testvalue']          
+          args : ['ns.testvalue']          
         }]
       },{
         type : 'fn',
         fnname : 'isgtlength',
         options : { length : 10 },
-        argprops : ['ns.testvalue'],
+        args : ['ns.testvalue'],
         errkey : 'notlongenough'
       }]
     }, (err, errkey, ispass) => {

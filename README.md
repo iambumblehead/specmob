@@ -203,7 +203,7 @@ specmobinterpreter.getpass(sess, cfg, graph, node, {
   },{
     type : 'fn',
     fnname : 'isgtlength',
-    options : { length : 10 },
+    opts : { length : 10 },
     args : ['testvalue'],
     errkey : 'notlongenough'
   }]

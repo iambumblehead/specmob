@@ -272,23 +272,23 @@ module.exports = ({ speccb, specfn, specerrfn } = {}, o = {}) => {
   //
   //   1488110309443
   //
-  o.retfn = (sess, cfg, graph, node, ns, opts, fn) => {
-    fnguard.isobj(sess, cfg, graph, node, opts)
-      .isany(ns).isstr(opts.fnname).isfn(fn);
+  o.retfn = (sess, cfg, graph, node, ns, spec, fn) => {
+    fnguard.isobj(sess, cfg, graph, node, spec)
+      .isany(ns).isstr(spec.fnname).isfn(fn);
 
-    o.getopts(sess, cfg, graph, node, ns, opts, (err, options, graph) => {
+    o.getopts(sess, cfg, graph, node, ns, spec, (err, opts, graph) => {
       if (err) return fn(err);
 
-      let args = o.getargs(graph, node, opts, ns, options);
+      let args = o.getargs(graph, node, spec, ns, opts);
 
-      o.callfn(sess, cfg, graph, node, args, options, opts, (err, fin, graph) => {
+      o.callfn(sess, cfg, graph, node, args, opts, spec, (err, fin, graph) => {
         if (err) return fn(err);
 
-        o.valordefval(sess, cfg, graph, node, ns, opts, fin, fn);
+        o.valordefval(sess, cfg, graph, node, ns, spec, fin, fn);
       });
     });
   };
-
+  
   // 'fn' uses different param ordering to be more user-space convenience
   //
   // standard: (sess, cfg, graph, node, ..., fn)
@@ -315,19 +315,19 @@ module.exports = ({ speccb, specfn, specerrfn } = {}, o = {}) => {
   //
   //   1488110309443
   //
-  o.retcb = (sess, cfg, graph, node, ns, opts, fn) => {
-    fnguard.isobj(sess, cfg, graph, node, opts)
+  o.retcb = (sess, cfg, graph, node, ns, spec, fn) => {
+    fnguard.isobj(sess, cfg, graph, node, spec)
       .isany(ns).isfn(fn);
 
-    o.getopts(sess, cfg, graph, node, ns, opts, (err, options, graph) => {
+    o.getopts(sess, cfg, graph, node, ns, spec, (err, opts, graph) => {
       if (err) return fn(err);
 
-      let args = o.getargs(graph, node, opts, ns);
+      let args = o.getargs(graph, node, spec, ns);
 
-      o.callcb(sess, cfg, graph, node, args, options, opts, (err, fin, graph) => {
+      o.callcb(sess, cfg, graph, node, args, opts, spec, (err, fin, graph) => {
         if (err) return fn(err);
 
-        o.valordefval(sess, cfg, graph, node, ns, opts, fin, fn);
+        o.valordefval(sess, cfg, graph, node, ns, spec, fin, fn);
       });
     });
   };
@@ -457,31 +457,29 @@ module.exports = ({ speccb, specfn, specerrfn } = {}, o = {}) => {
     });
   };
 
-  // baseData where key returns a match w/ an activeKey value
-  // are returned in an array
+  // returns array basekey matches on activekeys values
   //
-  //  var query = {
-  //    baseKey : baseKey,
-  //    activeKeyArr : activeKeyArr
+  //  let query = {
+  //    basekey,
+  //    activekeys
   //  };
   //
-  // *slow* pushes entire baseobject into the final array whos value matches
+  // *slow* pushes entire into the final array whos value matches
   o.retDataWHERE = (sess, cfg, graph, node, basearr = [], ns, query, fn) => {
     fnguard.isobj(sess, cfg, graph, ns, query).isfn(fn);
 
-    let keyarr = query.activeKeyArr || [],
-        { baseKey } = query,
+    let { basekey, keyarr = [] } = query,
         casttype;
 
     (function next (x, basearr, graph, resarr) {
       if (!x--) return fn(null, resarr, graph);
 
-      o.retopt(sess, cfg, graph, node, basearr[x], baseKey, (err, value, graph) => {
+      o.retopt(sess, cfg, graph, node, basearr[x], basekey, (err, value, graph) => {
         if (err) return fn(err);
 
         if (!casttype) {
           casttype = basearr.length
-            ? typeof (basearr[0] && basearr[0][baseKey.prop])
+            ? typeof (basearr[0] && basearr[0][basekey.prop])
             : 'string';
 
           if (casttype !== 'string' && castas[casttype]) {
@@ -498,19 +496,19 @@ module.exports = ({ speccb, specfn, specerrfn } = {}, o = {}) => {
     }(basearr.length, basearr, graph, []));
   };
 
-  // convenience method for obtaining one of two "options" definitions (the
-  // options namespace is used by functions and callbacks).
+  // convenience method for obtaining one of two "opts" definitions (the
+  // opts namespace is used by functions and callbacks).
   //
-  // 1. spec.options,
+  // 1. spec.opts,
   //
-  //    a static object literal that is passed as an options object
+  //    a static object literal that is passed as an opts object
   //
-  //    ex, { options : { username : 'chuck' } }
+  //    ex, { opts : { username : 'chuck' } }
   //
   // 2. spec.optarr,
   //
-  //    a list of dynamic patterns used to define the options namespace
-  //    each element becomes a named-property on the options object
+  //    a list of dynamic patterns used to define the opts namespace
+  //    each element becomes a named-property on the opts object
   //
   //    ex, {
   //          optarr : [{
@@ -520,23 +518,23 @@ module.exports = ({ speccb, specfn, specerrfn } = {}, o = {}) => {
   //          }]
   //        }
   //
-  // 3. spec.options AND spec.optarr
+  // 3. spec.opts AND spec.optarr
   //
   //    if both option types are defined, dynamic properties will be assigned
-  //    with spec.options to a new object
+  //    with spec.opts to a new object
   //
   o.getopts = (sess, cfg, graph, node, ns, spec, fn) => {
     fnguard.isobj(sess, cfg, graph, node, spec).isany(ns).isfn(fn);
 
     if (spec.optarr) {
-      o.retobj(sess, cfg, graph, node, ns, spec, (err, options, graph) => {
-        // copy to spec.options if exists
+      o.retobj(sess, cfg, graph, node, ns, spec, (err, opts, graph) => {
+        // copy to spec.opts if exists
         //
-        // allows literal options to be defined alongside dynamically generated ones
-        fn(null, Object.assign({}, spec.options || {}, options || {}), graph);
+        // allows literal opts to be defined alongside dynamically generated ones
+        fn(null, Object.assign({}, spec.opts || {}, opts || {}), graph);
       });
-    } else if (spec.options) {
-      fn(null, spec.options, graph);
+    } else if (spec.opts) {
+      fn(null, spec.opts, graph);
     } else {
       fn(null, {}, graph);
     }
@@ -612,11 +610,11 @@ module.exports = ({ speccb, specfn, specerrfn } = {}, o = {}) => {
     } else if (ORRe.test(type)) {
       o.whenOR(sess, cfg, graph, node, ns, spec.whenarr, fn);
     } else {
-      o.getopts(sess, cfg, graph, node, ns, spec, (err, options, graph) => {
+      o.getopts(sess, cfg, graph, node, ns, spec, (err, opts, graph) => {
         if (err) return fn(err);
 
         if (o.getfn(spec.fnname)(
-          o.getargs(graph, node, spec, ns), options, sess, cfg, graph, node)) {
+          o.getargs(graph, node, spec, ns), opts, sess, cfg, graph, node)) {
           fn(null, null);
         } else {
           fn(null, spec.errkey || 'errkey');
@@ -625,12 +623,12 @@ module.exports = ({ speccb, specfn, specerrfn } = {}, o = {}) => {
     }
   };
 
-  o.getpass = (sess, cfg, graph, node, ns, spec, fn) => (
+  o.getpass = (sess, cfg, graph, node, ns, spec, fn) =>
     o.geterror(sess, cfg, graph, node, ns, spec, (err, errmsg) => {
       if (err || errmsg) return fn(err, errmsg, false);
 
       fn(null, null, true);
-    }));
+    });
 
   return o;
 };

@@ -107,7 +107,7 @@ the paremeters are,
  * _cfg_ (configuration), app configuration details
  * _graph_, app state
  * _node_, node state, which presumably relates to the given pattern
- * _namespace_, an object with properties used to construct arguments (explained later)
+ * _ns_, (namespace) an object with properties used to construct arguments (explained later)
 
 these parameters are passed to the internal and external functions used by the interpreter. ex,
 
@@ -129,7 +129,7 @@ new forms can be defined on the interpreter at runtime to add support for new pa
 ```javascript
 let specmobinterpreter = specmob({speccb: callbacks, specfn: functions});
 
-specmobinterpreter.retregexp = (sess, cfg, graph, node, namespace, opts, fn) => {
+specmobinterpreter.retregexp = (sess, cfg, graph, node, ns, opts, fn) => {
   fn(null, new RegExp(opts.value, opts.modifier));
 };
 ```
@@ -147,12 +147,12 @@ let callbacks = {},
 let specmobinterpreter = specmob({speccb: callbacks, specfn: functions});
 
 // define function new type "regexp" using the name "retregexp"
-specmobinterpreter.retregexp = (sess, cfg, graph, node, namespace, opts, fn) => {
+specmobinterpreter.retregexp = (sess, cfg, graph, node, ns, opts, fn) => {
   fn(null, new RegExp(opts.value, opts.modifiers));
 };
 
 // use a pattern that includes the new "regexp" type
-specmobinterpreter.retopt(sess, cfg, graph, node, namespace, {
+specmobinterpreter.retopt(sess, cfg, graph, node, ns, {
   optarr : [{
     type : 'regexp',
     value : '^hello',

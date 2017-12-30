@@ -453,7 +453,7 @@ module.exports = ({ speccb, specfn, specerrfn } = {}, o = {}) => {
     o.getspecfn(opts.type)(sess, cfg, graph, node, ns, opts, (err, res, graph) => {
       if (err) return fn(err);
 
-      o.getfiltered(sess, cfg, graph, node, res, opts.filterarr, fn);
+      o.getfiltered(sess, cfg, graph, node, res, opts.filterinarr, fn);
     });
   };
 

@@ -394,7 +394,12 @@ describe('specmob.retobj( sess, cfg, graph, node, ns, opts, fn )', () => {
       specfn : {
         getmodifiedval : ([ val ]) => (
           `${val}modified`
-        )
+        ),
+        toUpper : ([ str ]) =>
+          String(str).toUpperCase(),
+        slice : ([ str, slicenum ]) => {
+          return String(str).slice(slicenum);
+        }
       }
     }).retobj(sess, cfg, graph, node, {
       hello : 'world'
@@ -408,9 +413,23 @@ describe('specmob.retobj( sess, cfg, graph, node, ns, opts, fn )', () => {
       value : 'worldliteral',
       name : 'literalval',
       args : [ 'ns.hello' ]
+    }, {
+      type : 'literal',
+      value : 'filteredliteral',
+      name : 'filteredval',
+      filterinarr : [ {
+        type : 'fn',
+        fnname : 'toUpper',
+        args : [ 'this' ]
+      }, {
+        type : 'fn',
+        fnname : 'slice',
+        args : [ 'ns.val', 8 ]
+      } ]
     } ], (err, res) => {
       expect(res.modifiedval).toBe('worldmodified');
       expect(res.literalval).toBe('worldliteral');
+      expect(res.filteredval).toBe('LITERAL');
 
       done();
     });

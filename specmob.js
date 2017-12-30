@@ -18,8 +18,10 @@ const fnguard = require('fnguard'),
 module.exports = ({ speccb, specfn, specerrfn } = {}, o = {}) => {
   // namespace re
   o.nsre = /^ns\./;
+  o.sessre = /^sess\./;
 
   o.nsrm = str => str.replace(o.nsre, '');
+  o.sessrm = str => str.replace(o.sessre, '');
 
   o.fn = (obj, name, type) => {
     if (name in obj && typeof obj[name] === 'function') {
@@ -184,7 +186,7 @@ module.exports = ({ speccb, specfn, specerrfn } = {}, o = {}) => {
   //
   //   'thisval'
   //
-  o.getnsargval = (graph, node, opts, ns, thisval, arg) => {
+  o.getnsargval = (sess, graph, node, opts, ns, thisval, arg) => {
     let argval = null;
 
     if (arg === 'this') {
@@ -193,6 +195,8 @@ module.exports = ({ speccb, specfn, specerrfn } = {}, o = {}) => {
       argval = check.isobj(ns)
         ? o.objlookup(o.nsrm(arg), ns)
         : o.throw_namespaceundefined(graph, node, ns, opts);
+    } else if (o.sessre.test(arg)) {
+      argval = o.objlookup(o.sessrm(arg), sess);
     } else {
       argval = String(arg);
     }
@@ -219,9 +223,9 @@ module.exports = ({ speccb, specfn, specerrfn } = {}, o = {}) => {
   //
   //   ['val1', 'val2', { prop1 : 'val1', prop2 :'val2' }]
   //
-  o.getargs = (graph, node, opts, ns) =>
+  o.getargs = (sess, graph, node, opts, ns) =>
     opts.args ? opts.args.map(prop => (
-      o.getnsargval(graph, node, opts, ns, ns, prop))) : [];
+      o.getnsargval(sess, graph, node, opts, ns, ns, prop))) : [];
 
   // return the value defined on the given namespace or null
   //
@@ -279,7 +283,7 @@ module.exports = ({ speccb, specfn, specerrfn } = {}, o = {}) => {
     o.getopts(sess, cfg, graph, node, ns, spec, (err, opts, graph) => {
       if (err) return fn(err);
 
-      let args = o.getargs(graph, node, spec, ns, opts);
+      let args = o.getargs(sess, graph, node, spec, ns, opts);
 
       o.callfn(sess, cfg, graph, node, args, opts, spec, (err, fin, graph) => {
         if (err) return fn(err);
@@ -288,7 +292,7 @@ module.exports = ({ speccb, specfn, specerrfn } = {}, o = {}) => {
       });
     });
   };
-  
+
   // 'fn' uses different param ordering to be more user-space convenience
   //
   // standard: (sess, cfg, graph, node, ..., fn)
@@ -322,7 +326,7 @@ module.exports = ({ speccb, specfn, specerrfn } = {}, o = {}) => {
     o.getopts(sess, cfg, graph, node, ns, spec, (err, opts, graph) => {
       if (err) return fn(err);
 
-      let args = o.getargs(graph, node, spec, ns);
+      let args = o.getargs(sess, graph, node, spec, ns);
 
       o.callcb(sess, cfg, graph, node, args, opts, spec, (err, fin, graph) => {
         if (err) return fn(err);
@@ -614,7 +618,7 @@ module.exports = ({ speccb, specfn, specerrfn } = {}, o = {}) => {
         if (err) return fn(err);
 
         if (o.getfn(spec.fnname)(
-          o.getargs(graph, node, spec, ns), opts, sess, cfg, graph, node)) {
+          o.getargs(sess, graph, node, spec, ns), opts, sess, cfg, graph, node)) {
           fn(null, null);
         } else {
           fn(null, spec.errkey || 'errkey');

@@ -126,36 +126,42 @@ describe('specmob.valfinish( sess, cfg, graph, node, ns, opts, val, fn )', () =>
   });
 });
 
-describe('specmob.getnsargval( graph, node, opts, ns, thisval, arg )', () => {
+describe('specmob.getnsargval( sess, graph, node, opts, ns, thisval, arg )', () => {
   it('should return thisval, when arg is "this"', () => {
     expect(
-      specmob().getnsargval(graph, node, opts, ns, 'thisval', 'this')
+      specmob().getnsargval(sess, graph, node, opts, ns, 'thisval', 'this')
     ).toBe('thisval');
   });
 
-  it('should return property lookup from ns, when arg is not "this"', () => {
+  it('should return property lookup from ns, when arg is "^ns."', () => {
     expect(
-      specmob().getnsargval(graph, node, opts, { hello : 'world' }, 'thisval', 'ns.hello')
+      specmob().getnsargval(sess, graph, node, opts, { hello : 'world' }, 'thisval', 'ns.hello')
     ).toBe('world');
+  });
+
+  it('should return property lookup from sess, when arg is "^sess."', () => {
+    expect(
+      specmob().getnsargval({ token : 'tokenval' }, graph, node, opts, { }, 'thisval', 'sess.token')
+    ).toBe('tokenval');
   });
 
   it('should return "string", when arg is not "string"', () => {
     expect(
-      specmob().getnsargval(graph, node, opts, { hello : 'world' }, 'thisval', 'string')
+      specmob().getnsargval(sess, graph, node, opts, { hello : 'world' }, 'thisval', 'string')
     ).toBe('string');
   });
 
   it('should throw an error if ns is not defined and arg is not "this"', () => {
     expect(
       () =>
-        specmob().getnsargval(graph, node, opts, null, 'thisval', 'ns.hello')
+        specmob().getnsargval(sess, graph, node, opts, null, 'thisval', 'ns.hello')
     ).toThrowError();
   });
 });
 
 describe('specmob.getargs( graph, node, opts, ns, thisval, arg )', () => {
   it('should return a list of args from the given ns', () => {
-    let args = specmob().getargs(graph, node, {
+    let args = specmob().getargs(sess, graph, node, {
       args : [ 'ns.prop1', 'ns.prop2', 'this' ]
     }, {
       prop1 : 'val1',
@@ -168,7 +174,7 @@ describe('specmob.getargs( graph, node, opts, ns, thisval, arg )', () => {
   });
 
   it('should return dynamic args', () => {
-    let args = specmob().getargs(sess, cfg, {
+    let args = specmob().getargs(sess, graph, node, {
       args : [ 'ns.actionframe', 'ns.modeldata.type' ]
     }, {
       actionframe : 'actionframe',

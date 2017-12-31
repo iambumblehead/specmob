@@ -15,12 +15,16 @@ const fnguard = require('fnguard'),
       win = (typeof window === 'object' ? window : this),
       setImmediate = win.setImmediate || setTimeout;
 
-module.exports = ({ speccb, specfn, specerrfn } = {}, o = {}) => {
+module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   // namespace re
-  o.nsre = /^ns\./;
+  o.nsre = nsre instanceof RegExp ? nsre : /^ns\./;
   o.sessre = /^sess\./;
 
-  o.nsrm = str => str.replace(o.nsre, '');
+  // if custom nsre is provided, do not strip namespace str
+  o.nsrm = nsre instanceof RegExp
+    ? str => str
+    : str => str.replace(o.nsre, '');
+
   o.sessrm = str => str.replace(o.sessre, '');
 
   o.fn = (obj, name, type) => {

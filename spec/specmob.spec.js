@@ -160,6 +160,21 @@ describe('specmob.getnsargval( sess, graph, node, opts, ns, thisval, arg )', () 
 });
 
 describe('specmob.getargs( graph, node, opts, ns, thisval, arg )', () => {
+  it('should support custom namespace re', () => {
+    let args = specmob({
+      nsre : /^(subj|init)\./
+    }).getargs(sess, graph, node, {
+      args : [ 'subj.prop', 'init.prop', 'this' ]
+    }, {
+      subj : { prop : 'val1' },
+      init : { prop : 'val2' }
+    });
+
+    expect(args[0]).toBe('val1');
+    expect(args[1]).toBe('val2');
+    expect(args[2].subj.prop).toBe('val1');
+  });
+
   it('should return a list of args from the given ns', () => {
     let args = specmob().getargs(sess, graph, node, {
       args : [ 'ns.prop1', 'ns.prop2', 'this' ]

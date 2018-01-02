@@ -32,7 +32,7 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
       return obj[name];
     }
 
-    throw new Error(`no ${type}: “${name}”`);
+    throw new Error(`no ${type}: “${name}”, invalid cbname or fnname`);
   };
 
   o.getnodekey = node =>
@@ -282,7 +282,7 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //
   o.retfn = (sess, cfg, graph, node, ns, spec, fn) => {
     fnguard.isobj(sess, cfg, graph, node, spec)
-      .isany(ns).isstr(spec.fnname).isfn(fn);
+      .isany(ns).isfn(fn);
 
     o.getopts(sess, cfg, graph, node, ns, spec, (err, opts, graph) => {
       if (err) return fn(err);

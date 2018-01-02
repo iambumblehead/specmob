@@ -1,5 +1,5 @@
 // Filename: specmob.spec.js
-// Timestamp: 2017.12.06-10:06:42 (last modified)
+// Timestamp: 2018.01.02-00:50:34 (last modified)
 // Author(s): bumblehead <chris@bumblehead.com>
 
 const specmob = require('../'),
@@ -682,6 +682,50 @@ describe('specmob.getpass( sess, cfg, graph, node, ns, spec, fn )', () => {
       done();
     });
   });
+
+  it('should evaluate `true` for a pattern with a callback that is true', done => {
+    let speccb = {
+          isstring : ([ val ], opts, fn) =>
+            fn(null, typeof val === 'string')
+        },
+        specfn = {
+          isstring : ([ val ]) =>
+            typeof val === 'string',
+          isgtlength : ([ val ], opts) =>
+            (String(val).length - 1) >= opts.length
+        },
+
+        specmobinterpreter = specmob({ speccb, specfn });
+
+    specmobinterpreter.getpass(sess, cfg, graph, node, {
+      testvalue : 'testvalue'
+    }, {
+      type : 'AND',
+      whenarr : [ {
+        type : 'OR',
+        errkey : 'notstringornumber',
+        whenarr : [ {
+          type : 'cb',
+          cbname : 'isstring',
+          args : [ 'testvalue' ]
+        }, {
+          type : 'fn',
+          fnname : 'isnumber',
+          args : [ 'testvalue' ]
+        } ]
+      }, {
+        type : 'fn',
+        fnname : 'isgtlength',
+        opts : { length : 4 },
+        args : [ 'testvalue' ],
+        errkey : 'notlongenough'
+      } ]
+    }, (err, errmsg, ispass) => {
+      expect(ispass).toBe(true);
+
+      done();
+    });
+  });  
 
   it('should evaluate `false` for a pattern that is false', done => {
     let speccb = {},

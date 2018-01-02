@@ -1,5 +1,5 @@
 // Filename: specmob.js
-// Timestamp: 2017.12.06-09:00:28 (last modified)
+// Timestamp: 2018.01.02-00:56:49 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)
 //
 // spec data directs the collection of values here.
@@ -618,16 +618,13 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     } else if (ORRe.test(type)) {
       o.whenOR(sess, cfg, graph, node, ns, spec.whenarr, fn);
     } else {
-      o.getopts(sess, cfg, graph, node, ns, spec, (err, opts, graph) => {
-        if (err) return fn(err);
-
-        if (o.getfn(spec.fnname)(
-          o.getargs(sess, graph, node, spec, ns), opts, sess, cfg, graph, node)) {
-          fn(null, null);
-        } else {
-          fn(null, spec.errkey || 'errkey');
-        }
-      });
+      o.retopt(sess, cfg, graph, node, ns, Object.assign({
+        type : 'fn' // fn by default
+      }, spec), (err, ispass) => (
+        (!err && ispass)
+          ? fn(null, null)
+          : fn(err, spec.errkey || 'errkey'))
+      );
     }
   };
 

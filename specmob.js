@@ -152,10 +152,11 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
         spec.type === undefined ||
         spec.type === 'opts') {
       cumval = Object.assign(cumval, val);
+    } else if (o.isvalidspecprop(spec.name) ||
+               o.isvalidspecprop(spec.cumprop)) {
+      cumval[spec.name || spec.cumprop] = val;
     } else {
-      cumval[
-        o.isvalidspecprop(spec.name) ? spec.name : 'value'
-      ] = val;
+      cumval = val;
     }
 
     return cumval;

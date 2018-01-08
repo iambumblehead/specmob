@@ -42,7 +42,7 @@ describe('specmob.valfinish( cumval, spec, val )', () => {
 
   it('should define val on cumval.value, when values are not merged', () => {
     let cumval = { cumvalprop : 1 },
-        spec = { type : 'literal' },
+        spec = { type : 'literal', cumprop : 'value' },
         val = 1,
 
         result = specmob().valfinish(cumval, spec, val);

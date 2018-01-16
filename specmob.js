@@ -1,5 +1,5 @@
 // Filename: specmob.js
-// Timestamp: 2018.01.02-00:56:49 (last modified)
+// Timestamp: 2018.01.16-00:06:04 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)
 //
 // spec data directs the collection of values here.
@@ -202,6 +202,8 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
         : o.throw_namespaceundefined(graph, node, ns, opts);
     } else if (o.sessre.test(arg)) {
       argval = o.objlookup(o.sessrm(arg), sess);
+    } else if (arg === 'ns') {
+      argval = ns;
     } else {
       argval = String(arg);
     }

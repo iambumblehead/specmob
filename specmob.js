@@ -109,15 +109,19 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
 
   o.throw_returnundefined = (graph, node, ns, opts) =>
     o.thrownode(graph, node, (
-      `[!!!] final spec results must not be not be "undefined": ${o.stringify(opts)}`));
+      `final spec results must not be not be "undefined": ${o.stringify(opts)}`));
 
   o.throw_namespaceundefined = (graph, node, ns, opts) =>
     o.thrownode(graph, node, (
-      `[!!!] arg namespace must not be "undefined": ${o.stringify(opts)}`));
+      `arg namespace must not be "undefined": ${o.stringify(opts)}`));
+
+  o.throw_propundefined = (graph, node, spec) =>
+    o.thrownode(graph, node, (
+      `invalid spec definition, "prop" required: ${o.stringify(spec)}`));
 
   o.throw_valisnotarray = (graph, node, opts) =>
     o.thrownode(graph, node, (
-      `[!!!] must be an array: ${o.stringify(opts)}`));
+      `must be an array: ${o.stringify(opts)}`));
 
   // return the named callback from cbobj, and name
   o.getcb = name => o.fn(speccb, name, 'cbfn');
@@ -262,8 +266,11 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //   'world'
   //
   o.retobjprop = (sess, cfg, graph, node, ns, opts, fn) => {
-    fnguard.isobj(sess, cfg, graph, node, opts).isany(ns)
-      .isnotundefined(opts.prop).isfn(fn);
+    fnguard.isobj(sess, cfg, graph, node, opts).isany(ns);
+
+    if (check.isundefined(opts.prop)) {
+      o.throw_propundefined(graph, node, opts);
+    }
 
     o.valordefval(sess, cfg, graph, node, ns, opts, (
       o.objlookup(opts.prop, ns)

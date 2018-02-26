@@ -391,10 +391,12 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
       o.retopt(sess, cfg, graph, node, ns, specarr[x], (err, val, graph) => {
         if (err) return fn(err);
 
-        if (check.isobj(val)) {
+        if (check.isstr(specarr[x].name)) {
+          resobj[specarr[x].name] = val;
+        } else if (check.isobj(val)) {
           resobj = Object.assign(resobj, val);
         } else {
-          resobj[specarr[x].name || 'value'] = val;
+          resobj['value'] = val;
         }
 
         setImmediate(() => next(++x, len, specarr, graph, resobj));

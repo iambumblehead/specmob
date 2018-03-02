@@ -129,7 +129,7 @@ describe('specmob.valfinish( sess, cfg, graph, node, ns, opts, val, fn )', () =>
 describe('specmob.getnsargval( sess, graph, node, opts, ns, thisval, arg )', () => {
   it('should return thisval, when arg is "this"', () => {
     expect(
-      specmob().getnsargval(sess, graph, node, opts, ns, 'thisval', 'this')
+      specmob().getnsargval(sess, graph, node, opts, { this : 'thisval' }, '', 'this')
     ).toBe('thisval');
   });
 
@@ -166,26 +166,28 @@ describe('specmob.getargs( graph, node, opts, ns, thisval, arg )', () => {
     }).getargs(sess, graph, node, {
       args : [ 'subj.prop', 'init.prop', 'this' ]
     }, {
+      this : 'val0',
       subj : { prop : 'val1' },
       init : { prop : 'val2' }
     });
 
     expect(args[0]).toBe('val1');
     expect(args[1]).toBe('val2');
-    expect(args[2].subj.prop).toBe('val1');
+    expect(args[2]).toBe('val0');
   });
 
   it('should return a list of args from the given ns', () => {
     let args = specmob().getargs(sess, graph, node, {
       args : [ 'ns.prop1', 'ns.prop2', 'this' ]
     }, {
+      this : 'val0',
       prop1 : 'val1',
       prop2 : 'val2'
     });
 
     expect(args[0]).toBe('val1');
     expect(args[1]).toBe('val2');
-    expect(args[2].prop1).toBe('val1');
+    expect(args[2]).toBe('val0');
   });
 
   it('should return dynamic args', () => {
@@ -540,7 +542,7 @@ describe('specmob.applyfilterarr( sess, cfg, graph, node, ns, filterarr, fn )', 
         add5 : ([ val ]) =>
           val + 5
       }
-    }).getfiltered(sess, cfg, graph, node, { val : '55' }, [ {
+    }).getfiltered(sess, cfg, graph, node, {}, '55', [ {
       type : 'fn',
       fnname : 'strip',
       args : [ 'ns.val' ]
@@ -725,7 +727,7 @@ describe('specmob.getpass( sess, cfg, graph, node, ns, spec, fn )', () => {
 
       done();
     });
-  });  
+  });
 
   it('should evaluate `false` for a pattern that is false', done => {
     let speccb = {},

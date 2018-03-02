@@ -199,7 +199,7 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     let argval = null;
 
     if (arg === 'this') {
-      argval = thisval;
+      argval = ns.this;
     } else if (o.nsre.test(arg)) {
       argval = check.isobj(ns)
         ? o.objlookup(o.nsrm(arg), ns)
@@ -473,7 +473,7 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     o.getspecfn(opts.type)(sess, cfg, graph, node, ns, opts, (err, res, graph) => {
       if (err) return fn(err);
 
-      o.getfiltered(sess, cfg, graph, node, res, opts.filterinarr, fn);
+      o.getfiltered(sess, cfg, graph, node, ns, res, opts.filterinarr, fn);
     });
   };
 
@@ -560,11 +560,11 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     }
   };
 
-  o.getfiltered = (sess, cfg, graph, node, ns, filterarr, fn) => {
+  o.getfiltered = (sess, cfg, graph, node, ns, val, filterarr, fn) => {
     if (Array.isArray(filterarr)) {
-      o.applyfilterarr(sess, cfg, graph, node, ns, filterarr, fn);
+      o.applyfilterarr(sess, cfg, graph, node, ns, val, filterarr, fn);
     } else {
-      fn(null, ns, graph);
+      fn(null, val, graph);
     }
   };
 
@@ -572,10 +572,8 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //
   // applies a series of mutations to a value...
   //
-  o.applyfilterarr = (sess, cfg, graph, node, ns, filterarr, fn) => {
-    fnguard.isobj(sess, cfg, graph, node).isany(ns, filterarr).isfn(fn);
-
-    filterarr = filterarr || [];
+  o.applyfilterarr = (sess, cfg, graph, node, ns, val, filterarr = [], fn) => {
+    fnguard.isobj(sess, cfg, graph, node).isany(ns).isarr(filterarr).isfn(fn);
 
     (function next (filterarr, x, len, graph, prev) {
       if (x >= len) return fn(null, prev.val, graph);
@@ -583,9 +581,9 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
       o.retopt(sess, cfg, graph, node, prev, filterarr[x], (err, val, graph) => {
         if (err) return fn(err);
 
-        next(filterarr, ++x, len, graph, Object.assign({}, prev, { val }));
+        next(filterarr, ++x, len, graph, Object.assign(prev, { val }));
       });
-    }(filterarr, 0, filterarr.length, graph, ns));
+    }(filterarr, 0, filterarr.length, graph, Object.assign({ this: val, val }, ns)));
   };
 
   o.whenAND = (sess, cfg, graph, node, ns, whenarr, fn) => {

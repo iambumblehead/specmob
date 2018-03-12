@@ -3,11 +3,16 @@
 // Author(s): bumblehead <chris@bumblehead.com>
 
 const specmob = require('../'),
-
       // 'empty' values given to specmob functions
       ns = { ns : 'ns' },
-      graph = { graph : 'graph' },
-      node = { node : 'node' },
+      node = {
+        node : 'node',
+        get : key => key
+      },
+      graph = {
+        graph : 'graph',
+        get : () => node
+      },
       sess = { sess : 'sess' },
       opts = { opts : 'opts' },
       cfg = { cfg : 'cfg' };
@@ -809,4 +814,3 @@ describe('specmob.getpass( sess, cfg, graph, node, ns, spec, fn )', () => {
     });
   });
 });
-

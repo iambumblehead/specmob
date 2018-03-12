@@ -356,10 +356,10 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //       cb: (args, opts, fn, sess, cfg, graph, node)
   //
   o.callcb = (sess, cfg, graph, node, args, opts, spec, fn) => {
-    o.getcb(spec.cbname)(args, opts, (err, fin) => (
+    o.getcb(spec.cbname)(args, opts, (err, fin, ngraph = graph) => (
       err
-        ? o.emiterr(sess, cfg, graph, node, err, fin, fn)
-        : fn(null, fin, graph)
+        ? o.emiterr(sess, cfg, ngraph, node, err, fin, fn)
+        : fn(null, fin, ngraph)
     ), sess, cfg, graph, node);
   };
 
@@ -386,7 +386,8 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   o.retobj = (sess, cfg, graph, node, ns, opt, fn) => {
     fnguard.isobj(sess, cfg, graph, node).isany(ns).isfn(fn);
 
-    let optarr = Array.isArray(opt) ? opt : (opt || {}).optarr || [];
+    let optarr = Array.isArray(opt) ? opt : (opt || {}).optarr || [],
+        nodekey = o.getnodekey(node);
 
     if (!Array.isArray(optarr)) {
       o.throw_valisnotarray(graph, node, optarr);
@@ -395,7 +396,7 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     (function next (x, len, specarr, graph, resobj) {
       if (x >= len) return fn(null, resobj, graph); // no errors
 
-      o.retopt(sess, cfg, graph, node, ns, specarr[x], (err, val, graph) => {
+      o.retopt(sess, cfg, graph, graph.get(nodekey), ns, specarr[x], (err, val, graph) => {
         if (err) return fn(err);
 
         if (check.isstr(specarr[x].name)) {
@@ -403,7 +404,7 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
         } else if (check.isobj(val)) {
           resobj = Object.assign(resobj, val);
         } else {
-          resobj['value'] = val;
+          resobj.value = val;
         }
 
         setImmediate(() => next(++x, len, specarr, graph, resobj));
@@ -583,7 +584,7 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
 
         next(filterarr, ++x, len, graph, Object.assign(prev, { val }));
       });
-    }(filterarr, 0, filterarr.length, graph, Object.assign({ this: val, val }, ns)));
+    }(filterarr, 0, filterarr.length, graph, Object.assign({ this : val, val }, ns)));
   };
 
   o.whenAND = (sess, cfg, graph, node, ns, whenarr, fn) => {

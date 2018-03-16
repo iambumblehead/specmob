@@ -209,7 +209,7 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     } else if (arg === 'ns') {
       argval = ns;
     } else {
-      argval = String(arg);
+      argval = arg;
     }
 
     return argval;

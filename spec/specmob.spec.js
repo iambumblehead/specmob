@@ -1,5 +1,5 @@
 // Filename: specmob.spec.js
-// Timestamp: 2018.01.02-00:50:34 (last modified)
+// Timestamp: 2018.05.07-14:33:13 (last modified)
 // Author(s): bumblehead <chris@bumblehead.com>
 
 const specmob = require('../'),
@@ -67,6 +67,20 @@ describe('specmob.valfinish( cumval, spec, val )', () => {
 
     expect(result.cumvalprop).toBe(1);
     expect(result.name).toBe(1);
+  });
+
+  it('should define val on cumval[spec.name], when spec.name is 0 (used for array-like ref)', () => {
+    let cumval = { name : 0, cumvalprop : 1 },
+        spec = {
+          type : 'literal',
+          name : 'name' },
+        val = 1,
+
+        result = specmob().valfinish(cumval, spec, val);
+
+    expect(result.name).toBe(1);
+    // should not add an 'result.undefined' namespace
+    expect(typeof result.undefined).toBe('undefined');
   });
 });
 

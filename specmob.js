@@ -1,5 +1,5 @@
 // Filename: specmob.js
-// Timestamp: 2018.01.16-00:06:04 (last modified)
+// Timestamp: 2018.05.07-14:26:00 (last modified)
 // Author(s): Bumblehead (www.bumblehead.com)
 //
 // spec data directs the collection of values here.
@@ -156,9 +156,10 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
         spec.type === undefined ||
         spec.type === 'opts') {
       cumval = Object.assign(cumval, val);
-    } else if (o.isvalidspecprop(spec.name) ||
-               o.isvalidspecprop(spec.cumprop)) {
-      cumval[spec.name || spec.cumprop] = val;
+    } else if (o.isvalidspecprop(spec.name)) {
+      cumval[spec.name] = val;
+    } else if (o.isvalidspecprop(spec.cumprop)) {
+      cumval[spec.cumprop] = val;
     } else {
       cumval = val;
     }

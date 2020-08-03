@@ -1,7 +1,8 @@
 {
   "name": "specmob",
   "main": "specmob",
-  "version": "0.6.2",
+  "module": "specmob",
+  "version": "0.6.3",
   "license": "MIT",
   "readmeFilename": "README.md",
   "description": "return dynamic results from dsl patterns",
@@ -15,18 +16,18 @@
   },
   "devDependencies": {
     "pre-commit": "^1.2.2",
-    "jasmine": "2.5.3",
-    "jasmine-spec-reporter": "3.2.0",
-    "eslint": "^4.7.2",
-    "eslint-config-airbnb-base": "^11.2.0",
-    "babel-eslint": "^7.2.3"
+    "nyc": "^15.1.0",
+    "babel-eslint": "^10.0.1",
+    "eslint": "^7.6.0",
+    "ava": "^3.11.1"
   },
   "keywords": [
     "spec"
   ],
   "scripts": {
-    "lint": "eslint 'src/*.js'",
-    "test": "jasmine --verbose"
+    "lint": "eslint specmob*js",
+    "test": "ava specmob.spec.js",
+    "test-cover": "nyc ava"
   },
   "pre-commit": {
     "silent": true,

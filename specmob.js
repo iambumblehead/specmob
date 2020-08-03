@@ -9,11 +9,11 @@
 //
 // 'ns' is short for 'namespace'
 
-const fnguard = require('fnguard'),
-      castas = require('castas'),
-      check = fnguard.spec,
-      win = (typeof window === 'object' ? window : this),
-      setImmediate = win.setImmediate || setTimeout;
+const fnguard = require('fnguard');
+const castas = require('castas');
+const check = fnguard.spec;
+const win = (typeof window === 'object' ? window : this);
+const setImmediate = win.setImmediate || setTimeout;
 
 module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   // namespace re
@@ -397,6 +397,7 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     (function next (x, len, specarr, graph, resobj) {
       if (x >= len) return fn(null, resobj, graph); // no errors
 
+      // eslint-disable-next-line max-len
       o.retopt(sess, cfg, graph, graph.get(nodekey), ns, specarr[x], (err, val, graph) => {
         if (err) return fn(err);
 
@@ -621,9 +622,9 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
 
   o.geterror = (sess, cfg, graph, node, ns, spec, fn) => {
     fnguard.isobj(sess, cfg, graph, spec, ns).isfn(fn);
-    const { type } = spec,
-          ANDRe = /^AND$/i,
-          ORRe = /^OR$/i;
+    const { type } = spec;
+    const ANDRe = /^AND$/i;
+    const ORRe = /^OR$/i;
 
     if (ANDRe.test(type)) {
       o.whenAND(sess, cfg, graph, node, ns, spec.whenarr, fn);

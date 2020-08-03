@@ -569,7 +569,7 @@ test.cb('applyfilterarr, should apply a sequence of filters', t => {
   });
 });
 
-test.cb('applyfilterarr, should apply a sequence of filters', t => {
+test.cb('retopt, should apply a sequence of filters', t => {
   specmob({
     speccb : {
       requestmonthlyhoroscope : (args, opts, fn) => (

@@ -4,9 +4,7 @@ specmob
 
 [![Build Status](https://travis-ci.org/iambumblehead/specmob.svg?branch=master)](https://travis-ci.org/iambumblehead/specmob)
 
-Return dynamic results from dsl patterns. Environments using [setImmediate][1] will parse results faster.
-
-specmob functions use patterns to generate results. for example, this simple pattern would result as 'world',
+Return dynamic results from dsl patterns. Specmob functions use patterns to generate results. for example, this simple pattern would result as 'world',
 
 ```javascript
 {

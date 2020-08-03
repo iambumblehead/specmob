@@ -13,7 +13,6 @@ const fnguard = require('fnguard');
 const castas = require('castas');
 const check = fnguard.spec;
 const win = (typeof window === 'object' ? window : this);
-const setImmediate = win.setImmediate || setTimeout;
 
 module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   // namespace re
@@ -409,7 +408,7 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
           resobj.value = val;
         }
 
-        setImmediate(() => next(++x, len, specarr, graph, resobj));
+        queueMicrotask(() => next(++x, len, specarr, graph, resobj));
       });
     }(0, optarr.length, optarr, graph, {}));
   };
@@ -514,7 +513,7 @@ module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
           resarr.push(basearr[x]);
         }
 
-        setImmediate(() => next(x, basearr, graph, resarr));
+        queueMicrotask(() => next(x, basearr, graph, resarr));
       });
     }(basearr.length, basearr, graph, []));
   };

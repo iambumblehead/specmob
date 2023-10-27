@@ -2,7 +2,9 @@ specmob
 =======
 **(c)[Bumblehead][0]**
 
-[![npm version](https://badge.fury.io/js/specmob.svg)](https://badge.fury.io/js/specmob) [![Build Status](https://github.com/iambumblehead/specmob/workflows/test/badge.svg)][2]
+[![npm version](https://badge.fury.io/js/specmob.svg)](https://badge.fury.io/js/specmob) ![Build Status](https://github.com/iambumblehead/specmob/workflows/test/badge.svg)
+
+
 
 Return dynamic results from dsl patterns. Specmob functions use patterns to generate results. for example, this simple pattern would result as 'world',
 

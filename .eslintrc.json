@@ -1,15 +1,22 @@
 {
+  "plugins": [],
+  "ignorePatterns": ["dist"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:markdown/recommended"    
+  ],  
   "env": {
-    "browser": true
+    "node": true,
+    "jest": true
   },
-  "parser": "babel-eslint",
   "parserOptions": {
     "sourceType": "module",
+    "ecmaVersion": "latest",
     "allowImportExportEverywhere": true
   },
   "globals": {
-    "chrome": false,
-    "browser": false
+    "window": true,
+    "Promise": true
   },
   "rules": {
     "global-require": 0,

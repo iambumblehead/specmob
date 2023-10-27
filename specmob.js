@@ -9,12 +9,13 @@
 //
 // 'ns' is short for 'namespace'
 
-const fnguard = require('fnguard');
-const castas = require('castas');
-const check = fnguard.spec;
-const win = (typeof window === 'object' ? window : this);
+import fnguard from 'fnguard'
+import castas from 'castas'
 
-module.exports = ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
+const check = fnguard.spec;
+const win = (typeof window === 'object' ? window : this) || {};
+
+export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   // namespace re
   o.nsre = nsre instanceof RegExp ? nsre : /^ns\./;
   o.sessre = /^sess\./;

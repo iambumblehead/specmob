@@ -76,13 +76,13 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
       err = o.specerr(err);
     } else if (o.isinsterr(err)) {
       err = o.specerr({
-        errmsg : err.message,
-        meta : err
+        errmsg: err.message,
+        meta: err
       });
     } else if (typeof err === 'string') {
       err = o.specerr({
-        errmsg : err,
-        meta : { err }
+        errmsg: err,
+        meta: { err }
       });
     }
 
@@ -223,17 +223,17 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   // ex,
   //
   //   {
-  //     args : ['prop1', 'prop2', 'this']
+  //     args: ['prop1', 'prop2', 'this']
   //   }
   //
   //   {
-  //     prop1 : 'val1',
-  //     prop2 : 'val2'
+  //     prop1: 'val1',
+  //     prop2: 'val2'
   //   }
   //
   // return,
   //
-  //   ['val1', 'val2', { prop1 : 'val1', prop2 :'val2' }]
+  //   ['val1', 'val2', { prop1: 'val1', prop2:'val2' }]
   //
   o.getargs = (sess, graph, node, opts, ns) =>
     opts.args ? opts.args.map(prop => (
@@ -257,10 +257,10 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //
   // ex,
   //
-  //   { hello : { my : 'world' } }
+  //   { hello: { my: 'world' } }
   //
-  //   { type : 'objprop',
-  //     prop : 'hello.my' }
+  //   { type: 'objprop',
+  //     prop: 'hello.my' }
   //
   // return,
   //
@@ -283,8 +283,8 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   // ex,
   //
   //   {
-  //     type : "fn",
-  //     fnname : "getdatenow"
+  //     type: "fn",
+  //     fnname: "getdatenow"
   //   }
   //
   // return,
@@ -326,8 +326,8 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   // ex,
   //
   //   {
-  //     type : "cb",
-  //     cbname : "requestdatenowfromservice"
+  //     type: "cb",
+  //     cbname: "requestdatenowfromservice"
   //   }
   //
   // return,
@@ -369,19 +369,19 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   // ex,
   //
   //   {
-  //     type : "obj",
-  //     objarr : [{
-  //       myprop1 : "myvalue1"
+  //     type: "obj",
+  //     objarr: [{
+  //       myprop1: "myvalue1"
   //     },{
-  //       myprop2 : "myvalue2"
+  //       myprop2: "myvalue2"
   //     }]
   //   }
   //
   // return,
   //
   //   {
-  //     myprop1 : "myvalue1"
-  //     myprop2 : "myvalue2"
+  //     myprop1: "myvalue1"
+  //     myprop2: "myvalue2"
   //   }
   //
   o.retobj = (sess, cfg, graph, node, ns, opt, fn) => {
@@ -419,13 +419,13 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   // ex,
   //
   //   {
-  //     type : "optarr",
-  //     optarr : [{
-  //       type : "fn",
-  //       fnname : "gettuesday"
+  //     type: "optarr",
+  //     optarr: [{
+  //       type: "fn",
+  //       fnname: "gettuesday"
   //     },{
-  //       type : "fn",
-  //       fnname : "getwednesday"
+  //       type: "fn",
+  //       fnname: "getwednesday"
   //     }]
   //   }
   //
@@ -526,7 +526,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //
   //    a static object literal that is passed as an opts object
   //
-  //    ex, { opts : { username : 'chuck' } }
+  //    ex, { opts: { username: 'chuck' } }
   //
   // 2. spec.optarr,
   //
@@ -534,10 +534,10 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //    each element becomes a named-property on the opts object
   //
   //    ex, {
-  //          optarr : [{
-  //            name : 'username',
-  //            type : 'fn',
-  //            fnname : 'getsessionusername'
+  //          optarr: [{
+  //            name: 'username',
+  //            type: 'fn',
+  //            fnname: 'getsessionusername'
   //          }]
   //        }
   //
@@ -586,7 +586,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
 
         next(filterarr, ++x, len, graph, Object.assign(prev, { val }));
       });
-    }(filterarr, 0, filterarr.length, graph, Object.assign({ this : val, val }, ns)));
+    }(filterarr, 0, filterarr.length, graph, Object.assign({ this: val, val }, ns)));
   };
 
   o.whenAND = (sess, cfg, graph, node, ns, whenarr, fn) => {
@@ -632,7 +632,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
       o.whenOR(sess, cfg, graph, node, ns, spec.whenarr, fn);
     } else {
       o.retopt(sess, cfg, graph, node, ns, Object.assign({
-        type : 'fn' // fn by default
+        type: 'fn' // fn by default
       }, spec), (err, ispass) => (
         (!err && ispass)
           ? fn(null, null)

@@ -1039,7 +1039,7 @@ test('CBretregexp, should allow for the definition and usage of the "regexp" pat
   assert.strictEqual(val, true);
 });
 
-test('retregexp, should allow for the definition and usage of the "regexp" pattern', async () => {
+test('retregexp, should allow definition + usage of "regexp" pattern', async () => {
   let speccb = {},
       specfn = {
         isregexp: (args, opts) => (

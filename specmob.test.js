@@ -168,9 +168,10 @@ test('getnsargval/7 should return "string", when arg is not "string"', () => {
 // eslint-disable-next-line max-len
 test('getnsargval/7 should throw an error if ns is not defined and arg is not "this"', async () => {
   await assert.rejects(async () => specmob().getnsargval(
-    sess, graph, node, opts, null, 'thisval', 'ns.hello'), {
-      message: 'key'
-    });
+    sess, graph, node, opts, null, 'thisval', 'ns.hello'
+  ), {
+    message: 'key'
+  });
 });
 
 test('getargs should support custom namespace re', () => {

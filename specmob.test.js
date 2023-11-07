@@ -702,7 +702,7 @@ test('getpass, should evaluate `false` for a pattern that is false', async () =>
       specfn = {
         isstring: ([val]) => (
           [typeof val === 'string']),
-        isgtlength: ([ val ], opts) => (
+        isgtlength: ([val], opts) => (
           (String(val).length - 1) >= opts.length)
       },
 

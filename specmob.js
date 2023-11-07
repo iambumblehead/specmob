@@ -139,9 +139,9 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //
   // return,
   //
-  //   o.retobjprop
+  //   o.CBretobjprop
   //
-  o.getspecfn = name => o.fn(o, `ret${(name || 'opts')}`, 'spec');
+  o.CBgetspecfn = name => o.fn(o, `CBret${(name || 'opts')}`, 'spec');
 
   o.isvalidspec = spec =>
     check.isobj(spec);
@@ -172,7 +172,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //
   // convenience function to return current val or spec-generated 'defaultval'
   //
-  o.valordefval = (sess, cfg, graph, node, ns, opts, val, fn) => {
+  o.CBvalordefval = (sess, cfg, graph, node, ns, opts, val, fn) => {
     fnguard
       .isobj(sess, cfg, graph, opts)
       .isany(node, ns, val)
@@ -180,7 +180,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
 
     if ((val === null ||
          val === undefined) && opts.def !== undefined) {
-      o.retopt(sess, cfg, graph, node, ns, opts.def, fn);
+      o.CBretopt(sess, cfg, graph, node, ns, opts.def, fn);
     } else {
       fn(null, [val, graph]);
     }
@@ -268,14 +268,14 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //
   //   'world'
   //
-  o.retobjprop = (sess, cfg, graph, node, ns, opts, fn) => {
+  o.CBretobjprop = (sess, cfg, graph, node, ns, opts, fn) => {
     fnguard.isobj(sess, cfg, graph, node, opts).isany(ns);
 
     if (check.isundefined(opts.prop)) {
       o.throw_propundefined(graph, node, opts);
     }
 
-    o.valordefval(sess, cfg, graph, node, ns, opts, (
+    o.CBvalordefval(sess, cfg, graph, node, ns, opts, (
       o.objlookup(opts.prop, ns)
     ), fn);
   };
@@ -293,7 +293,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //
   //   1488110309443
   //
-  o.retfn = (sess, cfg, graph, node, ns, spec, fn) => {
+  o.CBretfn = (sess, cfg, graph, node, ns, spec, fn) => {
     fnguard.isobj(sess, cfg, graph, node, spec)
       .isany(ns).isfn(fn);
 
@@ -308,7 +308,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
         if (err) return fn(err);
 
         graph = tuple[1] || graph
-        o.valordefval(sess, cfg, graph, node, ns, spec, tuple[0], fn);
+        o.CBvalordefval(sess, cfg, graph, node, ns, spec, tuple[0], fn);
       });
     });
   };
@@ -339,7 +339,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //
   //   1488110309443
   //
-  o.retcb = (sess, cfg, graph, node, ns, spec, fn) => {
+  o.CBretcb = (sess, cfg, graph, node, ns, spec, fn) => {
     fnguard.isobj(sess, cfg, graph, node, spec)
       .isany(ns).isfn(fn);
 
@@ -353,7 +353,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
         if (err) return fn(err);
 
         graph = tuple[1] || graph
-        o.valordefval(sess, cfg, graph, node, ns, spec, tuple[0], fn);
+        o.CBvalordefval(sess, cfg, graph, node, ns, spec, tuple[0], fn);
       });
     });
   };
@@ -391,7 +391,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //     myprop2: "myvalue2"
   //   }
   //
-  o.retobj = (sess, cfg, graph, node, ns, opt, fn) => {
+  o.CBretobj = (sess, cfg, graph, node, ns, opt, fn) => {
     fnguard.isobj(sess, cfg, graph, node).isany(ns).isfn(fn);
 
     let optarr = Array.isArray(opt) ? opt : (opt || {}).optarr || [],
@@ -405,7 +405,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
       if (x >= len) return fn(null, [resobj, graph]);
 
       // eslint-disable-next-line max-len
-      o.retopt(sess, cfg, graph, graph.get(nodekey), ns, specarr[x], (err, tuple) => {
+      o.CBretopt(sess, cfg, graph, graph.get(nodekey), ns, specarr[x], (err, tuple) => {
         if (err) return fn(err);
 
         graph = tuple[1] || graph
@@ -441,13 +441,13 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //
   //   ['tuesday', 'wednesday']
   //
-  o.retoptarr = (sess, cfg, graph, node, ns, opts, fn) => {
+  o.CBretoptarr = (sess, cfg, graph, node, ns, opts, fn) => {
     fnguard.isobj(sess, cfg, graph, node, ns, opts).isfn(fn);
 
     (function next (x, len, specarr, graph, resarr) {
       if (x >= len) return fn(null, [resarr, graph]); // no errors
 
-      o.retopt(sess, cfg, graph, node, ns, specarr[x], (err, tuple) => {
+      o.CBretopt(sess, cfg, graph, node, ns, specarr[x], (err, tuple) => {
         if (err) return fn(err);
 
         graph = tuple[1] || graph
@@ -458,13 +458,13 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     }(0, opts.optarr.length, opts.optarr, graph, []));
   };
 
-  o.retliteral = (sess, cfg, graph, node, ns, opts, fn) =>
+  o.CBretliteral = (sess, cfg, graph, node, ns, opts, fn) =>
     fn(null, [opts.value, graph]);
 
-  o.retopts = (sess, cfg, graph, node, ns, opts, fn) =>
+  o.CBretopts = (sess, cfg, graph, node, ns, opts, fn) =>
     fn(null, [opts, graph]);
 
-  o.retthis = (sess, cfg, graph, node, ns, opts, fn) =>
+  o.CBretthis = (sess, cfg, graph, node, ns, opts, fn) =>
     fn(null, [ns, graph]);
 
   // valid default types:
@@ -472,7 +472,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //   objprop, cb,
   //   literal, fn, optarr,
   //   objarr, method
-  o.retopt = (sess, cfg, graph, node, ns, opts, fn) => {
+  o.CBretopt = (sess, cfg, graph, node, ns, opts, fn) => {
     fnguard.isobj(sess, cfg, graph).isany(ns, opts, node).isfn(fn);
 
     const typeofstr = typeof opts
@@ -485,11 +485,11 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     }
 
 
-    o.getspecfn(opts.type)(sess, cfg, graph, node, ns, opts, (err, tuple) => {
+    o.CBgetspecfn(opts.type)(sess, cfg, graph, node, ns, opts, (err, tuple) => {
       if (err) return fn(err);
 
       graph = tuple[1] || graph
-      o.getfiltered(sess, cfg, graph, node, ns, tuple[0], opts.filterinarr, fn);
+      o.CBgetfiltered(sess, cfg, graph, node, ns, tuple[0], opts.filterinarr, fn);
     });
   };
 
@@ -500,8 +500,8 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //    activekeys
   //  };
   //
-  // *slow* pushes entire into the final array whos value matches
-  o.retDataWHERE = (sess, cfg, graph, node, basearr = [], ns, query, fn) => {
+  // *slow* pushes entire result to final array whos value matches
+  o.CBretDataWHERE = (sess, cfg, graph, node, basearr = [], ns, query, fn) => {
     fnguard.isobj(sess, cfg, graph, ns, query).isfn(fn);
 
     let { basekey, keyarr = [] } = query,
@@ -510,7 +510,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     (function next (x, basearr, graph, resarr) {
       if (!x--) return fn(null, [resarr, graph]);
 
-      o.retopt(sess, cfg, graph, node, basearr[x], basekey, (err, tuple) => {
+      o.CBretopt(sess, cfg, graph, node, basearr[x], basekey, (err, tuple) => {
         if (err) return fn(err);
 
         if (!casttype) {
@@ -564,7 +564,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     fnguard.isobj(sess, cfg, graph, node, spec).isany(ns).isfn(fn);
 
     if (spec.optarr) {
-      o.retobj(sess, cfg, graph, node, ns, spec, (err, tuple) => {
+      o.CBretobj(sess, cfg, graph, node, ns, spec, (err, tuple) => {
         // copy to spec.opts if exists
         //
         // allows literal opts to be defined alongside dynamically generated ones
@@ -578,9 +578,9 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     }
   };
 
-  o.getfiltered = (sess, cfg, graph, node, ns, val, filterarr, fn) => {
+  o.CBgetfiltered = (sess, cfg, graph, node, ns, val, filterarr, fn) => {
     if (Array.isArray(filterarr)) {
-      o.applyfilterarr(sess, cfg, graph, node, ns, val, filterarr, fn);
+      o.CBapplyfilterarr(sess, cfg, graph, node, ns, val, filterarr, fn);
     } else {
       fn(null, [val, graph]);
     }
@@ -590,13 +590,13 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //
   // applies a series of mutations to a value...
   //
-  o.applyfilterarr = (sess, cfg, graph, node, ns, val, filterarr = [], fn) => {
+  o.CBapplyfilterarr = (sess, cfg, graph, node, ns, val, filterarr = [], fn) => {
     fnguard.isobj(sess, cfg, graph, node).isany(ns).isarr(filterarr).isfn(fn);
 
     (function next (filterarr, x, len, graph, prev) {
       if (x >= len) return fn(null, [prev.val, graph]);
 
-      o.retopt(sess, cfg, graph, node, prev, filterarr[x], (err, tuple) => {
+      o.CBretopt(sess, cfg, graph, node, prev, filterarr[x], (err, tuple) => {
         if (err) return fn(err);
 
         graph = tuple[1] || graph
@@ -605,13 +605,13 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     }(filterarr, 0, filterarr.length, graph, Object.assign({ this: val, val }, ns)));
   };
 
-  o.whenAND = (sess, cfg, graph, node, ns, whenarr, fn) => {
+  o.CBwhenAND = (sess, cfg, graph, node, ns, whenarr, fn) => {
     fnguard.isobj(sess, cfg, graph, node).isany(ns).isfn(fn);
 
     (function next (x, len) {
       if (x >= len) return fn(null, null); // no errors
 
-      o.geterror(sess, cfg, graph, node, ns, whenarr[x], (err, errMsg) => {
+      o.CBgeterror(sess, cfg, graph, node, ns, whenarr[x], (err, errMsg) => {
         if (err) return fn(err);
         if (errMsg) return fn(null, errMsg);
 
@@ -620,12 +620,12 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     }(0, whenarr.length));
   };
 
-  o.whenOR = (sess, cfg, graph, node, ns, whenarr, fn) => {
+  o.CBwhenOR = (sess, cfg, graph, node, ns, whenarr, fn) => {
     fnguard.isobj(sess, cfg, graph, node).isany(ns).isfn(fn);
 
     (function next (x, len, errorMessage) {
       if (x >= len) return fn(null, errorMessage);
-      o.geterror(sess, cfg, graph, node, ns, whenarr[x], (err, errMsg) => {
+      o.CBgeterror(sess, cfg, graph, node, ns, whenarr[x], (err, errMsg) => {
         if (err) return fn(err);
         if (errMsg) {
           next(++x, len, errMsg);
@@ -636,18 +636,18 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     }(0, whenarr.length));
   };
 
-  o.geterror = (sess, cfg, graph, node, ns, spec, fn) => {
+  o.CBgeterror = (sess, cfg, graph, node, ns, spec, fn) => {
     fnguard.isobj(sess, cfg, graph, spec, ns).isfn(fn);
 
     switch(spec.type) {
     case AND:
-      o.whenAND(sess, cfg, graph, node, ns, spec.whenarr, fn);
+      o.CBwhenAND(sess, cfg, graph, node, ns, spec.whenarr, fn);
       break;
     case OR:
-      o.whenOR(sess, cfg, graph, node, ns, spec.whenarr, fn);
+      o.CBwhenOR(sess, cfg, graph, node, ns, spec.whenarr, fn);
       break;
     default:
-      o.retopt(sess, cfg, graph, node, ns, Object.assign({
+      o.CBretopt(sess, cfg, graph, node, ns, Object.assign({
         type: 'fn' // fn by default
       }, spec), (err, tuple) => (
         (!err && tuple[0])
@@ -656,8 +656,8 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     }
   };
 
-  o.getpass = (sess, cfg, graph, node, ns, spec, fn) =>
-    o.geterror(sess, cfg, graph, node, ns, spec, (err, errmsg) => {
+  o.CBgetpass = (sess, cfg, graph, node, ns, spec, fn) =>
+    o.CBgeterror(sess, cfg, graph, node, ns, spec, (err, errmsg) => {
       if (err || errmsg) return fn(err, [errmsg, false]);
 
       fn(null, [null, true]);

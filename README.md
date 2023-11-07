@@ -5,7 +5,6 @@ specmob
 [![npm version](https://badge.fury.io/js/specmob.svg)](https://badge.fury.io/js/specmob) ![Build Status](https://github.com/iambumblehead/specmob/workflows/test/badge.svg)
 
 
-
 Return dynamic results from dsl patterns. Specmob functions use patterns to generate results. for example, this simple pattern would result as 'world',
 
 ```javascript
@@ -69,18 +68,18 @@ let callbacks = {
   requestmonthlyhoroscope : ([val], opts, fn) => (
     // callback this returns a service communication...
     opts.thismonth % 2
-      ? fn(null, 'you have good luck this month!')
-      : fn(null, 'you have okay luck this month!')
+      ? fn(null, ['you have good luck this month!'])
+      : fn(null, ['you have okay luck this month!'])
   )
 }
 
-let specmobinterpreter = specmob({speccb: callbacks, specfn: functions);
+let specmobinst = specmob({speccb: callbacks, specfn: functions);
 ```
 
-all interpreter functions require the same six parameters and return results to a node-style callback _(err, res)_. some parameters may seem unnecessary and unusual but specmob is meant to be used within a larger program for which those parameters make sense. here's an example call,
+all interpreter functions require the same five parameters and return results matching a node-style callback _(err, res)_. some parameters may seem unnecessary and unusual but specmob is meant to be used within a larger program for which those parameters make sense. here's an example call,
 
 ```javascript
-specmobinterpreter.retopt(sess, cfg, graph, node, namespace, {
+const [val, graph] = await specmobinst.retopt(sess, cfg, graph, node, namespace, {
   optarr : [{
     optarr : [{
       format : 'mm'
@@ -96,8 +95,6 @@ specmobinterpreter.retopt(sess, cfg, graph, node, namespace, {
   type : 'cb',
   cbname : 'requestmonthlyhoroscope',
   name :  'horoscope'
-}, (err, graph, result) => {
-  
 })
 ```
 
@@ -114,22 +111,24 @@ these parameters are passed to the internal and external functions used by the i
 ```javascript
 let functions = {
   getdate : ([val], opts, sess, cfg, graph, node) =>
-    new Date()
+    [new Date()]
+  getdateAsync : async ([val], opts, sess, cfg, graph, node) =>
+    [new Date()]
 };
 let callbacks = {
   getdate : ([val], opts, fn, sess, cfg, graph, node) =>
-    fn(null, new Date())
+    fn(null, [new Date()])
 };
 ```
 
-for applications using specmob, any functionality or result becomes possible using these values which may yield data from the user session or the state of the application (graph). because specmob carries the values recursively to each call.
+for applications using specmob, any functionality or result becomes possible using these values which may yield data from the user session or the state of the application (graph). specmob carries the values recursively to each call.
 
-new forms can be defined on the interpreter at runtime to add support for new patterns. for example, adding support for the pattern of type "regexp". to add support define a new function named with _type_ prefixed by "ret".
+new forms can be defined on the interpreter at runtime to support new patterns. for example, adding support for the pattern of type "regexp". to add support define a new function named with _type_ prefixed by "ret".
 
 ```javascript
-let specmobinterpreter = specmob({speccb: callbacks, specfn: functions});
+let specmobinst = specmob({speccb: callbacks, specfn: functions});
 
-specmobinterpreter.retregexp = (sess, cfg, graph, node, ns, opts, fn) => {
+specmobinst.CBretregexp = (sess, cfg, graph, node, ns, opts, fn) => {
   fn(null, new RegExp(opts.value, opts.modifier));
 };
 ```
@@ -140,19 +139,19 @@ an example that constructs the interpreter, then adds support for the regexp pat
 let callbacks = {},
     functions = {
       isregexp : ([val], opts, sess, cfg, graph, node) =>
-        opts.re.test(opts.string)
+        [opts.re.test(opts.string)]
     };
 
 // construct interpreter
-let specmobinterpreter = specmob({speccb: callbacks, specfn: functions});
+let specmobinst = specmob({speccb: callbacks, specfn: functions});
 
 // define function new type "regexp" using the name "retregexp"
-specmobinterpreter.retregexp = (sess, cfg, graph, node, ns, opts, fn) => {
-  fn(null, new RegExp(opts.value, opts.modifiers));
+specmobinst.CBretregexp = (sess, cfg, graph, node, ns, opts, fn) => {
+  fn(null, [new RegExp(opts.value, opts.modifiers)]);
 };
 
 // use a pattern that includes the new "regexp" type
-specmobinterpreter.retopt(sess, cfg, graph, node, ns, {
+specmobinst.retopt(sess, cfg, graph, node, ns, {
   optarr : [{
     type : 'regexp',
     value : '^hello',
@@ -170,21 +169,22 @@ specmobinterpreter.retopt(sess, cfg, graph, node, ns, {
 });
 ```
 
-validation patterns can be used as well. if the validation fails it will return false and return an errkey if one is defined on the pattern,
+validation patterns can be used as well. if validation fails it will return false and an errkey, if one is defined on the pattern,
 
 ```javascript
 let callbacks = {},
     functions = {
       isstring : ([val], opts, sess, cfg, graph, node) =>
-        typeof val === 'string',
+        [typeof val === 'string'],
 
       isgtlength : ([val], opts, sess, cfg, graph, node) =>
-        (String(val).length - 1) >= opts.length
+        [(String(val).length - 1) >= opts.length]
     };
     
-let specmobinterpreter = specmob({speccb: callbacks, specfn: functions});
+let specmobinst = specmob({speccb: callbacks, specfn: functions});
 
-specmobinterpreter.getpass(sess, cfg, graph, node, {
+// [false, 'notlongenough']
+const [errkey, ispass] = await specmobinst.getpass(sess, cfg, graph, node, {
   testvalue : 'notlong'
 }, {
   type : 'AND',
@@ -207,14 +207,8 @@ specmobinterpreter.getpass(sess, cfg, graph, node, {
     args : ['testvalue'],
     errkey : 'notlongenough'
   }]
-}, (err, errkey, ispass) => {
-
-  console.log(ispass, errkey); // false 'notlongenough'
-
 });
 ```
-
-
 
 
 [0]: http://www.bumblehead.com                            "bumblehead"

@@ -18,17 +18,6 @@ const OR = 'OR';
 const win = (typeof window === 'object' ? window : this) || {};
 
 export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
-  // namespace re
-  o.nsre = nsre instanceof RegExp ? nsre : /^ns\./;
-  o.sessre = /^sess\./;
-
-  // if custom nsre is provided, do not strip namespace str
-  o.nsrm = nsre instanceof RegExp
-    ? str => str
-    : str => str.replace(o.nsre, '');
-
-  o.sessrm = str => str.replace(o.sessre, '');
-
   o.fn = (obj, name, type) => {
     if (name in obj && typeof obj[name] === 'function') {
       return obj[name];
@@ -91,10 +80,10 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     return err;
   };
 
-  o.emiterr = (sess, cfg, graph, node, err, val, fn, specerr) =>
+  o.emiterr = (sess, cfg, graph, node, err, val, fn, specerr) => (
     specerrfn(sess, cfg, graph, node, specerr = o.geterr(err), (err, graph) => {
       if (!specerr.isfatal) fn(null, val, graph);
-    });
+    }));
 
   o.throw = (...args) => {
     console.error('[!!!] specmob: ', ...args);
@@ -109,21 +98,21 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     o.throw(o.getnodekey(node), ...args);
   };
 
-  o.throw_returnundefined = (graph, node, ns, opts) =>
+  o.throw_returnundefined = (graph, node, ns, opts) => (
     o.thrownode(graph, node, (
-      `final spec results must not be not be "undefined": ${o.stringify(opts)}`));
+      `final spec results must not be not be "undefined": ${o.stringify(opts)}`)));
 
-  o.throw_namespaceundefined = (graph, node, ns, opts) =>
+  o.throw_namespaceundefined = (graph, node, ns, opts) => (
     o.thrownode(graph, node, (
-      `arg namespace must not be "undefined": ${o.stringify(opts)}`));
+      `arg namespace must not be "undefined": ${o.stringify(opts)}`)));
 
-  o.throw_propundefined = (graph, node, spec) =>
+  o.throw_propundefined = (graph, node, spec) => (
     o.thrownode(graph, node, (
-      `invalid spec definition, "prop" required: ${o.stringify(spec)}`));
+      `invalid spec definition, "prop" required: ${o.stringify(spec)}`)));
 
-  o.throw_valisnotarray = (graph, node, opts) =>
+  o.throw_valisnotarray = (graph, node, opts) => (
     o.thrownode(graph, node, (
-      `must be an array: ${o.stringify(opts)}`));
+      `must be an array: ${o.stringify(opts)}`)));
 
   // return the named callback from cbobj, and name
   o.getcb = name => o.fn(speccb, name, 'cbfn');
@@ -200,15 +189,19 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //
   o.getnsargval = (sess, graph, node, opts, ns, thisval, arg) => {
     let argval = null;
-
+    
     if (arg === 'this') {
       argval = ns.this;
-    } else if (o.nsre.test(arg)) {
+    } else if (String(arg).startsWith('ns.')) {
       argval = check.isobj(ns)
-        ? o.objlookup(o.nsrm(arg), ns)
+        ? o.objlookup(arg.slice(3), ns)
         : o.throw_namespaceundefined(graph, node, ns, opts);
-    } else if (o.sessre.test(arg)) {
-      argval = o.objlookup(o.sessrm(arg), sess);
+    } else if (nsre && nsre.test(arg)) {
+      argval = check.isobj(ns)
+        ? o.objlookup(arg, ns)
+        : o.throw_namespaceundefined(graph, node, ns, opts);
+    } else if (String(arg).startsWith('sess.')) {
+      argval = o.objlookup(arg.slice(5), sess);
     } else if (arg === 'ns') {
       argval = ns;
     } else {
@@ -251,9 +244,9 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //
   //   'world'
   //
-  o.objlookup = (nsstr, obj) =>
+  o.objlookup = (nsstr, obj) => (
     String(nsstr).split('.').reduce(
-      (a, b) => a ? (b in a ? a[b] : a[Number(b)]) : null, obj);
+      (a, b) => a ? (b in a ? a[b] : a[Number(b)]) : null, obj));
 
   // obtain a value from namespace given a property lookup string
   //

@@ -807,3 +807,4 @@ test('getpass, should return given errkey (if defined) for pattern that evaluate
 // cfg.spec.getpass
 // cfg.spec.isvalidspec
 // cfg.spec.valfinish
+

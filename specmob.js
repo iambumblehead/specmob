@@ -14,6 +14,8 @@ import castas from 'castas'
 
 const check = fnguard.spec;
 const win = (typeof window === 'object' ? window : this) || {};
+const AND = 'AND';
+const OR = 'OR';
 
 export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   // namespace re
@@ -180,7 +182,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
          val === undefined) && opts.def !== undefined) {
       o.retopt(sess, cfg, graph, node, ns, opts.def, fn);
     } else {
-      fn(null, val, graph);
+      fn(null, [val, graph]);
     }
   };
 
@@ -295,15 +297,18 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     fnguard.isobj(sess, cfg, graph, node, spec)
       .isany(ns).isfn(fn);
 
-    o.getopts(sess, cfg, graph, node, ns, spec, (err, opts, graph) => {
+    o.getopts(sess, cfg, graph, node, ns, spec, (err, tuple) => {
       if (err) return fn(err);
 
-      let args = o.getargs(sess, graph, node, spec, ns, opts);
+      graph = tuple[1] || graph
+      let args = o.getargs(sess, graph, node, spec, ns, tuple[0]);
 
-      o.callfn(sess, cfg, graph, node, args, opts, spec, (err, fin, graph) => {
+      // o.callfn(sess, cfg, graph, node, args, opts, spec, (err, fin, graph) => {
+      o.callfn(sess, cfg, graph, node, args, tuple[0], spec, (err, tuple) => {
         if (err) return fn(err);
 
-        o.valordefval(sess, cfg, graph, node, ns, spec, fin, fn);
+        graph = tuple[1] || graph
+        o.valordefval(sess, cfg, graph, node, ns, spec, tuple[0], fn);
       });
     });
   };
@@ -338,15 +343,17 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     fnguard.isobj(sess, cfg, graph, node, spec)
       .isany(ns).isfn(fn);
 
-    o.getopts(sess, cfg, graph, node, ns, spec, (err, opts, graph) => {
+    o.getopts(sess, cfg, graph, node, ns, spec, (err, tuple) => {
       if (err) return fn(err);
 
+      graph = tuple[1] || graph
       let args = o.getargs(sess, graph, node, spec, ns);
 
-      o.callcb(sess, cfg, graph, node, args, opts, spec, (err, fin, graph) => {
+      o.callcb(sess, cfg, graph, node, args, tuple[0], spec, (err, tuple) => {
         if (err) return fn(err);
 
-        o.valordefval(sess, cfg, graph, node, ns, spec, fin, fn);
+        graph = tuple[1] || graph
+        o.valordefval(sess, cfg, graph, node, ns, spec, tuple[0], fn);
       });
     });
   };
@@ -395,18 +402,19 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     }
 
     (function next (x, len, specarr, graph, resobj) {
-      if (x >= len) return fn(null, resobj, graph); // no errors
+      if (x >= len) return fn(null, [resobj, graph]);
 
       // eslint-disable-next-line max-len
-      o.retopt(sess, cfg, graph, graph.get(nodekey), ns, specarr[x], (err, val, graph) => {
+      o.retopt(sess, cfg, graph, graph.get(nodekey), ns, specarr[x], (err, tuple) => {
         if (err) return fn(err);
 
+        graph = tuple[1] || graph
         if (check.isstr(specarr[x].name)) {
-          resobj[specarr[x].name] = val;
-        } else if (check.isobj(val)) {
-          resobj = Object.assign(resobj, val);
+          resobj[specarr[x].name] = tuple[0];
+        } else if (check.isobj(tuple[0])) {
+          resobj = Object.assign(resobj, tuple[0]);
         } else {
-          resobj.value = val;
+          resobj.value = tuple[0];
         }
 
         queueMicrotask(() => next(++x, len, specarr, graph, resobj));
@@ -437,12 +445,13 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     fnguard.isobj(sess, cfg, graph, node, ns, opts).isfn(fn);
 
     (function next (x, len, specarr, graph, resarr) {
-      if (x >= len) return fn(null, resarr, graph); // no errors
+      if (x >= len) return fn(null, [resarr, graph]); // no errors
 
-      o.retopt(sess, cfg, graph, node, ns, specarr[x], (err, res, graph) => {
+      o.retopt(sess, cfg, graph, node, ns, specarr[x], (err, tuple) => {
         if (err) return fn(err);
 
-        resarr.push(res);
+        graph = tuple[1] || graph
+        resarr.push(tuple[0]);
 
         next(++x, len, specarr, graph, resarr);
       });
@@ -450,13 +459,13 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   };
 
   o.retliteral = (sess, cfg, graph, node, ns, opts, fn) =>
-    fn(null, opts.value, graph);
+    fn(null, [opts.value, graph]);
 
   o.retopts = (sess, cfg, graph, node, ns, opts, fn) =>
-    fn(null, opts, graph);
+    fn(null, [opts, graph]);
 
   o.retthis = (sess, cfg, graph, node, ns, opts, fn) =>
-    fn(null, ns, graph);
+    fn(null, [ns, graph]);
 
   // valid default types:
   //   regexp, this,
@@ -466,17 +475,21 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   o.retopt = (sess, cfg, graph, node, ns, opts, fn) => {
     fnguard.isobj(sess, cfg, graph).isany(ns, opts, node).isfn(fn);
 
-    if (/^string|number/.test(typeof opts)
+    const typeofstr = typeof opts
+
+    if ((typeofstr === 'string' || typeofstr === 'number')
         || (opts && opts.spread)) {
-      return fn(null, opts, graph);
+      return fn(null, [opts, graph]);
     } else if (!opts) {
-      return fn(null, null, graph);
+      return fn(null, [null, graph]);
     }
 
-    o.getspecfn(opts.type)(sess, cfg, graph, node, ns, opts, (err, res, graph) => {
+
+    o.getspecfn(opts.type)(sess, cfg, graph, node, ns, opts, (err, tuple) => {
       if (err) return fn(err);
 
-      o.getfiltered(sess, cfg, graph, node, ns, res, opts.filterinarr, fn);
+      graph = tuple[1] || graph
+      o.getfiltered(sess, cfg, graph, node, ns, tuple[0], opts.filterinarr, fn);
     });
   };
 
@@ -495,9 +508,9 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
         casttype;
 
     (function next (x, basearr, graph, resarr) {
-      if (!x--) return fn(null, resarr, graph);
+      if (!x--) return fn(null, [resarr, graph]);
 
-      o.retopt(sess, cfg, graph, node, basearr[x], basekey, (err, value, graph) => {
+      o.retopt(sess, cfg, graph, node, basearr[x], basekey, (err, tuple) => {
         if (err) return fn(err);
 
         if (!casttype) {
@@ -510,10 +523,11 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
           }
         }
 
-        if (~keyarr.indexOf(value)) {
+        if (~keyarr.indexOf(tuple[0])) {
           resarr.push(basearr[x]);
         }
 
+        graph = tuple[1] || graph
         queueMicrotask(() => next(x, basearr, graph, resarr));
       });
     }(basearr.length, basearr, graph, []));
@@ -550,16 +564,17 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     fnguard.isobj(sess, cfg, graph, node, spec).isany(ns).isfn(fn);
 
     if (spec.optarr) {
-      o.retobj(sess, cfg, graph, node, ns, spec, (err, opts, graph) => {
+      o.retobj(sess, cfg, graph, node, ns, spec, (err, tuple) => {
         // copy to spec.opts if exists
         //
         // allows literal opts to be defined alongside dynamically generated ones
-        fn(null, Object.assign({}, spec.opts || {}, opts || {}), graph);
+        graph = tuple[1] || graph
+        fn(null, [Object.assign({}, spec.opts || {}, tuple[0] || {}), graph]);
       });
     } else if (spec.opts) {
-      fn(null, spec.opts, graph);
+      fn(null, [spec.opts, graph]);
     } else {
-      fn(null, {}, graph);
+      fn(null, [{}, graph]);
     }
   };
 
@@ -567,7 +582,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     if (Array.isArray(filterarr)) {
       o.applyfilterarr(sess, cfg, graph, node, ns, val, filterarr, fn);
     } else {
-      fn(null, val, graph);
+      fn(null, [val, graph]);
     }
   };
 
@@ -579,12 +594,13 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     fnguard.isobj(sess, cfg, graph, node).isany(ns).isarr(filterarr).isfn(fn);
 
     (function next (filterarr, x, len, graph, prev) {
-      if (x >= len) return fn(null, prev.val, graph);
+      if (x >= len) return fn(null, [prev.val, graph]);
 
-      o.retopt(sess, cfg, graph, node, prev, filterarr[x], (err, val, graph) => {
+      o.retopt(sess, cfg, graph, node, prev, filterarr[x], (err, tuple) => {
         if (err) return fn(err);
 
-        next(filterarr, ++x, len, graph, Object.assign(prev, { val }));
+        graph = tuple[1] || graph
+        next(filterarr, ++x, len, graph, Object.assign(prev, { val: tuple[0] }));
       });
     }(filterarr, 0, filterarr.length, graph, Object.assign({ this: val, val }, ns)));
   };
@@ -622,30 +638,29 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
 
   o.geterror = (sess, cfg, graph, node, ns, spec, fn) => {
     fnguard.isobj(sess, cfg, graph, spec, ns).isfn(fn);
-    const { type } = spec;
-    const ANDRe = /^AND$/i;
-    const ORRe = /^OR$/i;
 
-    if (ANDRe.test(type)) {
+    switch(spec.type) {
+    case AND:
       o.whenAND(sess, cfg, graph, node, ns, spec.whenarr, fn);
-    } else if (ORRe.test(type)) {
+      break;
+    case OR:
       o.whenOR(sess, cfg, graph, node, ns, spec.whenarr, fn);
-    } else {
+      break;
+    default:
       o.retopt(sess, cfg, graph, node, ns, Object.assign({
         type: 'fn' // fn by default
-      }, spec), (err, ispass) => (
-        (!err && ispass)
+      }, spec), (err, tuple) => (
+        (!err && tuple[0])
           ? fn(null, null)
-          : fn(err, spec.errkey || 'errkey'))
-      );
+          : fn(err, spec.errkey || 'errkey')));
     }
   };
 
   o.getpass = (sess, cfg, graph, node, ns, spec, fn) =>
     o.geterror(sess, cfg, graph, node, ns, spec, (err, errmsg) => {
-      if (err || errmsg) return fn(err, errmsg, false);
+      if (err || errmsg) return fn(err, [errmsg, false]);
 
-      fn(null, null, true);
+      fn(null, [null, true]);
     });
 
   return o;

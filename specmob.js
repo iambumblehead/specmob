@@ -17,11 +17,21 @@ const AND = 'AND'
 const OR = 'OR'
 const win = (typeof window === 'object' ? window : this) || {}
 
+const stringify = obj => (
+  /string|boolean|number/.test(typeof obj)
+    ? obj : JSON.stringify(obj, null, '  '))
+
 const specmoberr_invalidcbname = name => new Error(
   `invalid: cbname “${name}”`)
 
 const specmoberr_invalidfnname = name => new Error(
   `invalid: fnname “${name}”`)
+
+const specmoberr_valisnotarr = optarr => new Error(
+  `must be an array: ${stringify(optarr)}`)
+
+const specmoberr_propundefined = spec => new Error(
+  `invalid spec definition, "prop" required: ${stringify(spec)}`)
 
 export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   o.fn = (obj, name) => {
@@ -33,10 +43,9 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   o.getnodekey = node =>
     node && typeof node.get === 'function' && node.get('key')
 
-  o.stringify = obj =>
-    (/string|boolean|number/.test(typeof obj)
+  o.stringify = obj => (
+    /string|boolean|number/.test(typeof obj)
       ? obj : JSON.stringify(obj, null, '  '))
-
 
   o.specerr = ({
     isfatal = true,
@@ -102,21 +111,9 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     o.throw(o.getnodekey(node), ...args)
   }
 
-  o.throw_returnundefined = (graph, node, ns, opts) => (
-    o.thrownode(graph, node, (
-      `final spec results must not be not be "undefined": ${o.stringify(opts)}`)))
-
   o.throw_namespaceundefined = (graph, node, ns, opts) => (
     o.thrownode(graph, node, (
       `arg namespace must not be "undefined": ${o.stringify(opts)}`)))
-
-  o.throw_propundefined = (graph, node, spec) => (
-    o.thrownode(graph, node, (
-      `invalid spec definition, "prop" required: ${o.stringify(spec)}`)))
-
-  o.throw_valisnotarray = (graph, node, opts) => (
-    o.thrownode(graph, node, (
-      `must be an array: ${o.stringify(opts)}`)))
 
   // return the named callback from cbobj, and name
   o.getcb = name => o.fn(speccb, name, 'cbfn')
@@ -269,7 +266,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     fnguard.isobj(sess, cfg, graph, node, opts).isany(ns)
 
     if (check.isundefined(opts.prop)) {
-      o.throw_propundefined(graph, node, opts)
+      return fn(specmoberr_propundefined(opts))
     }
 
     o.valordefval(sess, cfg, graph, node, ns, opts, (
@@ -294,10 +291,16 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     fnguard.isobj(sess, cfg, graph, node, spec)
       .isany(ns).isfn(fn)
 
+    let args
+
     o.getopts(sess, cfg, graph, node, ns, spec, (err, opts, graph) => {
       if (err) return fn(err)
 
-      let args = o.getargs(sess, graph, node, spec, ns, opts)
+      try {
+        args = o.getargs(sess, graph, node, spec, ns, opts)
+      } catch (e) {
+        return fn(e)
+      }
 
       o.callfn(sess, cfg, graph, node, args, opts, spec, (err, fin, graph) => {
         if (err) return fn(err)
@@ -346,13 +349,19 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //   1488110309443
   //
   o.retcb = (sess, cfg, graph, node, ns, spec, fn) => {
+    let args
+
     fnguard.isobj(sess, cfg, graph, node, spec)
       .isany(ns).isfn(fn)
 
     o.getopts(sess, cfg, graph, node, ns, spec, (err, opts, graph) => {
       if (err) return fn(err)
 
-      let args = o.getargs(sess, graph, node, spec, ns)
+      try {
+        args = o.getargs(sess, graph, node, spec, ns)
+      } catch (e) {
+        return fn(e)
+      }
 
       o.callcb(sess, cfg, graph, node, args, opts, spec, (err, fin, graph) => {
         if (err) return fn(err)
@@ -401,16 +410,13 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //   }
   //
   o.retobj = (sess, cfg, graph, node, ns, opt, fn) => {
-    console.log('====== start')
     fnguard.isobj(sess, cfg, graph, node).isany(ns).isfn(fn)
-    console.log('====== end')
 
     let optarr = Array.isArray(opt) ? opt : (opt || {}).optarr || [],
         nodekey = o.getnodekey(node)
 
     if (!Array.isArray(optarr)) {
-      console.log('trowing')
-      o.throw_valisnotarray(graph, node, optarr)
+      return fn(specmoberr_valisnotarr(optarr))
     }
 
     (function next (x, len, specarr, graph, resobj) {

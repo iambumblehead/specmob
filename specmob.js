@@ -17,13 +17,17 @@ const AND = 'AND';
 const OR = 'OR';
 const win = (typeof window === 'object' ? window : this) || {};
 
+const specmoberr_invalidcbname = name => new Error(
+  `invalid: cbname “${name}”`);
+
+const specmoberr_invalidfnname = name => new Error(
+  `invalid: fnname “${name}”`);
+
 export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   o.fn = (obj, name, type) => {
-    if (name in obj && typeof obj[name] === 'function') {
-      return obj[name];
-    }
-
-    throw new Error(`no ${type}: “${name}”, invalid cbname or fnname`);
+    return (name in obj && typeof obj[name] === 'function')
+      ? obj[name]
+      : null
   };
 
   o.getnodekey = node =>
@@ -310,15 +314,18 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //
   o.callfn = (sess, cfg, graph, node, args, opts, spec, fn) => {
     const func = o.getfn(spec.fnname)
+    if (!func) {
+      return fn(specmoberr_invalidfnname(spec.fnname))
+    }
 
-    if (func.constructor.name === 'AsyncFunction') {
+    if (func && func.constructor && func.constructor.name === 'AsyncFunction') {
       func(args, opts, sess, cfg, graph, node).then(fin => (
         o.isinsterr(fin)
           ? o.emiterr(sess, cfg, graph, node, fin, fin, fn)
           : fn(null, fin, graph)))
+        .catch(e => fn(e))
     } else {
       const fin = func(args, opts, sess, cfg, graph, node);
-
       return o.isinsterr(fin)
         ? o.emiterr(sess, cfg, graph, node, fin, fin, fn)
         : fn(null, fin, graph);
@@ -361,7 +368,12 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //       cb: (args, opts, fn, sess, cfg, graph, node)
   //
   o.callcb = (sess, cfg, graph, node, args, opts, spec, fn) => {
-    o.getcb(spec.cbname)(args, opts, (err, fin, ngraph = graph) => (
+    const func = o.getcb(spec.cbname)
+    if (!func) {
+      return fn(specmoberr_invalidcbname(speccb, spec.cbname))
+    }
+
+    func(args, opts, (err, fin, ngraph = graph) => (
       err
         ? o.emiterr(sess, cfg, ngraph, node, err, fin, fn)
         : fn(null, fin, ngraph)

@@ -193,7 +193,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //
   o.getnsargval = (sess, graph, node, opts, ns, thisval, arg) => {
     let argval = null
-    
+
     if (arg === 'this') {
       argval = ns.this
     } else if (String(arg).startsWith('ns.')) {
@@ -455,7 +455,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   o.retoptarr = (sess, cfg, graph, node, ns, opts, fn) => {
     fnguard.isobj(sess, cfg, graph, node, ns, opts).isfn(fn)
 
-    (function next (x, len, specarr, graph, resarr) {
+    ;(function next (x, len, specarr, graph, resarr) {
       if (x >= len) return fn(null, resarr, graph) // no errors
 
       o.retopt(sess, cfg, graph, node, ns, specarr[x], (err, res, graph) => {
@@ -613,7 +613,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   o.whenAND = (sess, cfg, graph, node, ns, whenarr, fn) => {
     fnguard.isobj(sess, cfg, graph, node).isany(ns).isfn(fn)
 
-    (function next (x, len) {
+    ;(function next (x, len) {
       if (x >= len) return fn(null, null) // no errors
 
       o.geterror(sess, cfg, graph, node, ns, whenarr[x], (err, errMsg) => {
@@ -628,7 +628,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   o.whenOR = (sess, cfg, graph, node, ns, whenarr, fn) => {
     fnguard.isobj(sess, cfg, graph, node).isany(ns).isfn(fn)
 
-    (function next (x, len, errorMessage) {
+    ;(function next (x, len, errorMessage) {
       if (x >= len) return fn(null, errorMessage)
       o.geterror(sess, cfg, graph, node, ns, whenarr[x], (err, errMsg) => {
         if (err) return fn(err)

@@ -89,7 +89,7 @@ test('valfinish/8 should return value if it is not null or undefined', async () 
   const res = await promisify(specmob().valordefval)(
     sess, cfg, graph, node, ns, opts, 'value')
 
-  assert.strictEqual(res, 'value')  
+  assert.strictEqual(res, 'value')
 })
 
 // eslint-disable-next-line max-len

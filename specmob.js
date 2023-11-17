@@ -34,7 +34,12 @@ const specmoberr_propundefined = spec => new Error(
   `invalid spec definition, "prop" required: ${stringify(spec)}`)
 
 export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
-  o.fn = (obj, name) => {
+  // allow speccb and specfn to be accessed directly from created
+  // spec system w/out need of constructing any pattern
+  o.fn = specfn
+  o.cb = speccb
+
+  o.objgetfn = (obj, name) => {
     return (name in obj && typeof obj[name] === 'function')
       ? obj[name]
       : null
@@ -116,10 +121,10 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
       `arg namespace must not be "undefined": ${o.stringify(opts)}`)))
 
   // return the named callback from cbobj, and name
-  o.getcb = name => o.fn(speccb, name, 'cbfn')
+  o.getcb = name => o.objgetfn(speccb, name, 'cbfn')
 
   // return the named function from fnfobj, and name
-  o.getfn = name => o.fn(specfn, name, 'fnfn')
+  o.getfn = name => o.objgetfn(specfn, name, 'fnfn')
 
   // return the named spec function from this namespace, and 'ret'+name
   //
@@ -131,7 +136,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   //
   //   o.retobjprop
   //
-  o.getspecfn = name => o.fn(o, `ret${(name || 'opts')}`, 'spec')
+  o.getspecfn = name => o.objgetfn(o, `ret${(name || 'opts')}`, 'spec')
 
   o.isvalidspec = spec =>
     check.isobj(spec)

@@ -597,6 +597,19 @@ test('retopt, should apply a sequence of filters', async () => {
   assert.strictEqual(res.startsWith('you have '), true)
 })
 
+test('retopt, should return error if unsupported pattern type', async () => {
+  await assert.rejects(async () => promisify(specmob({
+    specfn: {
+      getdate: () => new Date()
+    }
+  }).retopt)(sess, cfg, graph, node, ns, {
+    type: 'custompattern',
+    args: ['num']
+  }), {
+    message: 'invalid: pattern type “custompattern”'
+  })
+})
+
 // eslint-disable-next-line max-len
 test('retregexp, should allow for the definition and usage of the "regexp" pattern', async () => {
   let speccb = {},
@@ -807,3 +820,4 @@ test('getpass, should return given errkey (if defined) for pattern that evaluate
 // cfg.spec.getpass
 // cfg.spec.isvalidspec
 // cfg.spec.valfinish
+

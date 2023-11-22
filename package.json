@@ -1,7 +1,7 @@
 {
   "name": "specmob",
   "type": "module",
-  "version": "0.6.7",
+  "version": "0.6.8",
   "license": "MIT",
   "readmeFilename": "README.md",
   "description": "return dynamic results from dsl patterns",

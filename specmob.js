@@ -27,6 +27,9 @@ const specmoberr_invalidcbname = name => new Error(
 const specmoberr_invalidfnname = name => new Error(
   `invalid: fnname “${name}”`)
 
+const specmoberr_invalidtypename = name => new Error(
+  `invalid: pattern type “${name}”`)
+
 const specmoberr_valisnotarr = optarr => new Error(
   `must be an array: ${stringify(optarr)}`)
 
@@ -504,7 +507,13 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
       return fn(null, null, graph)
     }
 
-    o.getspecfn(opts.type)(sess, cfg, graph, node, ns, opts, (err, res, graph) => {
+
+    const specfn = o.getspecfn(opts.type)
+    if (typeof specfn !== 'function') {
+      return fn(specmoberr_invalidtypename(opts.type))
+    }
+
+    specfn(sess, cfg, graph, node, ns, opts, (err, res, graph) => {
       if (err) return fn(err)
 
       o.getfiltered(sess, cfg, graph, node, ns, res, opts.filterinarr, fn)

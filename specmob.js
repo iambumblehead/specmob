@@ -36,11 +36,12 @@ const specmoberr_valisnotarr = optarr => new Error(
 const specmoberr_propundefined = spec => new Error(
   `invalid spec definition, "prop" required: ${stringify(spec)}`)
 
-export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
+export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   // allow speccb and specfn to be accessed directly from created
   // spec system w/out need of constructing any pattern
   o.fn = specfn
   o.cb = speccb
+  o.typeprop = typeprop || 'type'
 
   o.objgetfn = (obj, name) => {
     return (name in obj && typeof obj[name] === 'function')
@@ -153,8 +154,8 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   // cumval or is defined on cumval.
   o.valfinish = (cumval, spec, val) => {
     if (spec.spread === true ||
-        spec.type === undefined ||
-        spec.type === 'opts') {
+        spec[o.typeprop] === undefined ||
+        spec[o.typeprop] === 'opts') {
       cumval = Object.assign(cumval, val)
     } else if (o.isvalidspecprop(spec.name)) {
       cumval[spec.name] = val
@@ -508,9 +509,9 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
     }
 
 
-    const specfn = o.getspecfn(opts.type)
+    const specfn = o.getspecfn(opts[o.typeprop])
     if (typeof specfn !== 'function') {
-      return fn(specmoberr_invalidtypename(opts.type))
+      return fn(specmoberr_invalidtypename(opts[o.typeprop]))
     }
 
     specfn(sess, cfg, graph, node, ns, opts, (err, res, graph) => {
@@ -664,7 +665,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
   o.geterror = (sess, cfg, graph, node, ns, spec, fn) => {
     fnguard.isobj(sess, cfg, graph, spec, ns).isfn(fn)
 
-    switch(spec.type) {
+    switch(spec[o.typeprop]) {
     case AND:
       o.whenAND(sess, cfg, graph, node, ns, spec.whenarr, fn)
       break
@@ -673,7 +674,7 @@ export default ({ speccb, specfn, specerrfn, nsre } = {}, o = {}) => {
       break
     default:
       o.retopt(sess, cfg, graph, node, ns, Object.assign({
-        type: 'fn' // fn by default
+        [o.typeprop]: 'fn' // fn by default
       }, spec), (err, ispass) => (
         (!err && ispass)
           ? fn(null, null)

@@ -7,39 +7,39 @@ specmob
 `specmob` returns dynamic results from dsl patterns. For example, this simple pattern would result as 'world',
 
 ```javascript
-{
-  type : 'literal',
-  value : 'world'
-}
+({
+  type: 'literal',
+  value: 'world'
+})
 ```
 
 This pattern returns the product of a function named 'sayhello',
 ```javascript
-{
-  type : 'fn',
-  fnname : 'sayhello'
-}
+({
+  type: 'fn',
+  fnname: 'sayhello'
+})
 ```
 
 Nested and grouped patterns describe complex operations. This pattern resolves a monthly horoscope using the two-digit representation of the current month. "fn" stands for "function" and "cb" stands for "callback".
 ```javascript
-{
-  optarr : [{
-    optarr : [{
-      format : 'mm'
+({
+  optarr: [{
+    optarr: [{
+      format: 'mm'
     },{
-      type : 'fn',
-      fnname : 'getdate',
-      name : 'date'
+      type: 'fn',
+      fnname: 'getdate',
+      name: 'date'
     }],
-    type : 'fn',
-    fnname : 'getmonthfromdate',
-    name :  'monthnumber'
+    type: 'fn',
+    fnname: 'getmonthfromdate',
+    name: 'monthnumber'
   }],
-  type : 'cb',
-  cbname : 'requestmonthlyhoroscope',
-  name :  'horoscope'
-}
+  type: 'cb',
+  cbname: 'requestmonthlyhoroscope',
+  name: 'horoscope'
+})
 ```
 
 ---------------------------------------------------------
@@ -49,20 +49,20 @@ Nested and grouped patterns describe complex operations. This pattern resolves a
 
 ```javascript
 const functions = {
-  getdate : ([val], opts) =>
-    new Date(), 
+  getdate: ([val], opts) =>
+    new Date(),
 
-  getmonthfromdate : ([val], opts) => {
-    const month = opts.date.getMonth() + 1;
+  getmonthfromdate: ([val], opts) => {
+    const month = opts.date.getMonth() + 1
 
     return opts.format === 'mm'
       ? ('0' + month).slice(-2) // 0 padded
-      : month;
+      : month
   }
 }
 
 const callbacks = {
-  requestmonthlyhoroscope : ([val], opts, fn) => (
+  requestmonthlyhoroscope: ([val], opts, fn) => (
     // callback this returns a service communication...
     opts.thismonth % 2
       ? fn(null, 'you have good luck this month!')
@@ -70,30 +70,30 @@ const callbacks = {
   )
 }
 
-const specmobinterpreter = specmob({speccb: callbacks, specfn: functions);
+const specmobinterpreter = specmob({speccb: callbacks, specfn: functions})
 ```
 
 all interpreter functions use the same six parameters and most return results to a node-style callback _(err, res)_. some parameters may seem unnecessary and unusual but specmob is meant to be used within a larger program for which those parameters make sense. here's an example call,
 
 ```javascript
 specmobinterpreter.retopt(sess, cfg, graph, node, namespace, {
-  optarr : [{
-    optarr : [{
-      format : 'mm'
+  optarr: [{
+    optarr: [{
+      format: 'mm'
     },{
-      type : 'fn',
-      fnname : 'getdate',
-      name : 'date'
+      type: 'fn',
+      fnname: 'getdate',
+      name: 'date'
     }],
-    type : 'fn',
-    fnname : 'getmonthfromdate',
-    name :  'monthnumber'
+    type: 'fn',
+    fnname: 'getmonthfromdate',
+    name: 'monthnumber'
   }],
-  type : 'cb',
-  cbname : 'requestmonthlyhoroscope',
-  name :  'horoscope'
+  type: 'cb',
+  cbname: 'requestmonthlyhoroscope',
+  name: 'horoscope'
 }, (err, graph, result) => {
-  
+
 })
 ```
 
@@ -109,13 +109,13 @@ these parameters are passed to the internal and external functions used by the i
 
 ```javascript
 const functions = {
-  getdate : ([val], opts, sess, cfg, graph, node) =>
+  getdate: ([val], opts, sess, cfg, graph, node) =>
     new Date()
-};
+}
 const callbacks = {
-  getdate : ([val], opts, fn, sess, cfg, graph, node) =>
+  getdate: ([val], opts, fn, sess, cfg, graph, node) =>
     fn(null, new Date())
-};
+}
 ```
 
 For applications using specmob, any functionality or result becomes possible using patterns to resolve data from the user session or the state of the application (graph).
@@ -123,11 +123,11 @@ For applications using specmob, any functionality or result becomes possible usi
 New forms can be defined on the interpreter at runtime to add support for new patterns. for example, adding support for the pattern of type "regexp". to add support define a new function named with _type_ prefixed by "ret".
 
 ```javascript
-const specmobinterpreter = specmob({speccb: callbacks, specfn: functions});
+const specmobinterpreter = specmob({speccb: callbacks, specfn: functions})
 
 specmobinterpreter.retregexp = (sess, cfg, graph, node, ns, opts, fn) => {
-  fn(null, new RegExp(opts.value, opts.modifier));
-};
+  fn(null, new RegExp(opts.value, opts.modifier))
+}
 ```
 
 an example that constructs the interpreter, then adds support for the regexp pattern, then interprets a pattern using the type "regexp",
@@ -135,35 +135,35 @@ an example that constructs the interpreter, then adds support for the regexp pat
 ```javascript
 const callbacks = {}
 const functions = {
-  isregexp : ([val], opts, sess, cfg, graph, node) =>
+  isregexp: ([val], opts, sess, cfg, graph, node) =>
     opts.re.test(opts.string)
-};
+}
 
 // construct interpreter
-const specmobinterpreter = specmob({speccb: callbacks, specfn: functions});
+const specmobinterpreter = specmob({speccb: callbacks, specfn: functions})
 
 // define function new type "regexp" using the name "retregexp"
 specmobinterpreter.retregexp = (sess, cfg, graph, node, ns, opts, fn) => {
-  fn(null, new RegExp(opts.value, opts.modifiers));
-};
+  fn(null, new RegExp(opts.value, opts.modifiers))
+}
 
 // use a pattern that includes the new "regexp" type
 specmobinterpreter.retopt(sess, cfg, graph, node, ns, {
-  optarr : [{
-    type : 'regexp',
-    value : '^hello',
-    modifiers : '',
-    name : 're'
+  optarr: [{
+    type: 'regexp',
+    value: '^hello',
+    modifiers: '',
+    name: 're'
   },{
-    type : 'literal',
-    value : 'hello at beginning of string',
-    name : 'string'
+    type: 'literal',
+    value: 'hello at beginning of string',
+    name: 'string'
   }],
-  type : 'fn',
-  fnname : 'isregexp'
+  type: 'fn',
+  fnname: 'isregexp'
 }, (err, graph, res) => {
   console.log(res) // true
-});
+})
 ```
 
 Validation patterns can be used as well. When validation fails it will return false and an errkey if one is defined on the pattern,
@@ -171,40 +171,40 @@ Validation patterns can be used as well. When validation fails it will return fa
 ```javascript
 const callbacks = {}
 const functions = {
-  isstring : ([val], opts, sess, cfg, graph, node) =>
+  isstring: ([val], opts, sess, cfg, graph, node) =>
     typeof val === 'string',
-  isgtlength : ([val], opts, sess, cfg, graph, node) =>
+  isgtlength: ([val], opts, sess, cfg, graph, node) =>
     (String(val).length - 1) >= opts.length
-};
-    
-const specmobinterpreter = specmob({speccb: callbacks, specfn: functions});
+}
+
+const specmobinterpreter = specmob({speccb: callbacks, specfn: functions})
 
 specmobinterpreter.getpass(sess, cfg, graph, node, {
-  testvalue : 'notlong'
+  testvalue: 'notlong'
 }, {
-  type : 'AND',
-  whenarr : [{
-    type : 'OR',
-    errkey : 'notstringornumber',
-    whenarr : [{
-      type : 'fn',
-      fnname : 'isstring',
-      args : ['testvalue']
+  type: 'AND',
+  whenarr: [{
+    type: 'OR',
+    errkey: 'notstringornumber',
+    whenarr: [{
+      type: 'fn',
+      fnname: 'isstring',
+      args: ['testvalue']
     },{
-      type : 'fn',
-      fnname : 'isnumber',
-      args : ['testvalue']
+      type: 'fn',
+      fnname: 'isnumber',
+      args: ['testvalue']
     }]
   },{
-    type : 'fn',
-    fnname : 'isgtlength',
-    opts : { length : 10 },
-    args : ['testvalue'],
-    errkey : 'notlongenough'
+    type: 'fn',
+    fnname: 'isgtlength',
+    opts: { length: 10 },
+    args: ['testvalue'],
+    errkey: 'notlongenough'
   }]
 }, (err, errkey, ispass) => {
-  console.log(ispass, errkey); // false 'notlongenough'
-});
+  console.log(ispass, errkey) // false 'notlongenough'
+})
 ```
 
 

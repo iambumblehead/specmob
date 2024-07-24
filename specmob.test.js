@@ -35,8 +35,10 @@ test('valfinish/3 should merge cumval and val when spec.type is `undefined` or "
       specopts = { type: 'opts' },
       val = { valprop: 1 },
 
-      resultundefined = specmob().valfinish(cumval, specundefined, val),
-      resultopts = specmob().valfinish(cumval, specopts, val)
+      resultundefined = specmob({ typeprop: 'type' })
+        .valfinish(cumval, specundefined, val),
+      resultopts = specmob({ typeprop: 'type' })
+        .valfinish(cumval, specopts, val)
 
   assert.strictEqual(resultundefined.cumvalprop, 1)
   assert.strictEqual(resultundefined.valprop, 1)
@@ -50,7 +52,8 @@ test('valfinish/3 should define val on cumval.value, when values are not merged'
       spec = { type: 'literal', cumprop: 'value' },
       val = 1,
 
-      result = specmob().valfinish(cumval, spec, val)
+      result = specmob({ typeprop: 'type' })
+        .valfinish(cumval, spec, val)
 
   assert.strictEqual(result.cumvalprop, 1)
   assert.strictEqual(result.value, 1)
@@ -64,7 +67,7 @@ test('valfinish/3 should define val on cumval[spec.name], when values are not me
         name: 'name' },
       val = 1,
 
-      result = specmob().valfinish(cumval, spec, val)
+      result = specmob({ typeprop: 'type' }).valfinish(cumval, spec, val)
 
   assert.strictEqual(result.cumvalprop, 1)
   assert.strictEqual(result.name, 1)
@@ -78,7 +81,7 @@ test('valfinish/3 should define val on cumval[spec.name], when spec.name is 0 (u
         name: 'name' },
       val = 1,
 
-      result = specmob().valfinish(cumval, spec, val)
+      result = specmob({ typeprop: 'type' }).valfinish(cumval, spec, val)
 
   assert.strictEqual(result.name, 1)
   // should not add an 'result.undefined' namespace
@@ -86,7 +89,7 @@ test('valfinish/3 should define val on cumval[spec.name], when spec.name is 0 (u
 })
 
 test('valfinish/8 should return value if it is not null or undefined', async () => {
-  const res = await promisify(specmob().valordefval)(
+  const res = await promisify(specmob({ typeprop: 'type' }).valordefval)(
     sess, cfg, graph, node, ns, opts, 'value')
 
   assert.strictEqual(res, 'value')
@@ -94,7 +97,7 @@ test('valfinish/8 should return value if it is not null or undefined', async () 
 
 // eslint-disable-next-line max-len
 test('valfinish/8 should return value if it is null or undefined AND opts.defaultval is not defined', async () => {
-  const res = await promisify(specmob().valordefval)(
+  const res = await promisify(specmob({ typeprop: 'type' }).valordefval)(
     sess, cfg, graph, node, ns, opts, null)
 
   assert.strictEqual(res, null)
@@ -102,7 +105,7 @@ test('valfinish/8 should return value if it is null or undefined AND opts.defaul
 
 // eslint-disable-next-line max-len
 test('valfinish/8 should return value if it is not null or undefned and opts.defaultval is defined', async () => {
-  const res = await promisify(specmob().valordefval)(
+  const res = await promisify(specmob({ typeprop: 'type' }).valordefval)(
     sess, cfg, graph, node, ns, { def: 'defultval' }, 'value')
 
   assert.strictEqual(res, 'value')
@@ -110,14 +113,16 @@ test('valfinish/8 should return value if it is not null or undefned and opts.def
 
 // eslint-disable-next-line max-len
 test('valfinish/8 should return opts.def when defined AND value is null or undefined', async () => {
-  const res = await promisify(specmob().valordefval)(
+  const res = await promisify(specmob({ typeprop: 'type' }).valordefval)(
     sess, cfg, graph, node, ns, { def: 'def' }, null)
 
   assert.strictEqual(res, 'def')
 })
 
 test('valfinish/8 should return opts.def string definition', async () => {
-  const res = await promisify(specmob().valordefval)(sess, cfg, graph, node, ns, {
+  const res = await promisify(
+    specmob({ typeprop: 'type' }).valordefval
+  )(sess, cfg, graph, node, ns, {
     def: 'def'
   }, null)
 
@@ -125,7 +130,9 @@ test('valfinish/8 should return opts.def string definition', async () => {
 })
 
 test('valfinish/8 should return opts.def spec definition', async () => {
-  const res = await promisify(specmob().valordefval)(sess, cfg, graph, node, ns, {
+  const res = await promisify(
+    specmob({ typeprop: 'type' }).valordefval
+  )(sess, cfg, graph, node, ns, {
     def: {
       type: 'literal',
       value: 'def'
@@ -137,32 +144,33 @@ test('valfinish/8 should return opts.def spec definition', async () => {
 
 test('getnsargval/7 should return thisval, when arg is "this"', () => {
   assert.strictEqual(
-    specmob().getnsargval(sess, graph, node, opts, { this: 'thisval' }, '', 'this')
+    specmob({ typeprop: 'type' })
+      .getnsargval(sess, graph, node, opts, { this: 'thisval' }, '', 'this')
     , 'thisval')
 })
 
 test('getnsargval/7 should return property lookup from ns, when arg is "^ns."', () => {
-  assert.strictEqual(specmob().getnsargval(sess, graph, node, opts, {
+  assert.strictEqual(specmob({ typeprop: 'type' }).getnsargval(sess, graph, node, opts, {
     hello: 'world'
   }, 'thisval', 'ns.hello'), 'world')
 })
 
 // eslint-disable-next-line max-len
 test('getnsargval/7 should return property lookup from sess, when arg is "^sess."', () => {
-  assert.strictEqual(specmob().getnsargval({
+  assert.strictEqual(specmob({ typeprop: 'type' }).getnsargval({
     token: 'tokenval'
   }, graph, node, opts, { }, 'thisval', 'sess.token'), 'tokenval')
 })
 
 test('getnsargval/7 should return "string", when arg is not "string"', () => {
-  assert.strictEqual(specmob().getnsargval(sess, graph, node, opts, {
+  assert.strictEqual(specmob({ typeprop: 'type' }).getnsargval(sess, graph, node, opts, {
     hello: 'world'
   }, 'thisval', 'string'), 'string')
 })
 
 // eslint-disable-next-line max-len
 test('getnsargval/7 should throw an error if ns is not defined and arg is not "this"', async () => {
-  await assert.rejects(async () => promisify(specmob().getnsargval)(
+  await assert.rejects(async () => promisify(specmob({ typeprop: 'type' }).getnsargval)(
     sess, graph, node, opts, null, 'thisval', 'ns.hello'), { message: 'key' })
 })
 
@@ -183,7 +191,7 @@ test('getargs should support custom namespace re', () => {
 })
 
 test('getargs should return a list of args from the given ns', () => {
-  let args = specmob().getargs(sess, graph, node, {
+  let args = specmob({ typeprop: 'type' }).getargs(sess, graph, node, {
     args: ['ns.prop1', 'ns.prop2', 'this']
   }, {
     this: 'val0',
@@ -197,7 +205,7 @@ test('getargs should return a list of args from the given ns', () => {
 })
 
 test('getargs should return dynamic args', () => {
-  let args = specmob().getargs(sess, graph, node, {
+  let args = specmob({ typeprop: 'type' }).getargs(sess, graph, node, {
     args: ['ns.actionframe', 'ns.modeldata.type']
   }, {
     actionframe: 'actionframe',
@@ -209,26 +217,26 @@ test('getargs should return dynamic args', () => {
 })
 
 test('objlookup, should return "world", for "hello" and `{hello: "world"}`', () => {
-  assert.strictEqual(specmob().objlookup('hello', {
+  assert.strictEqual(specmob({ typeprop: 'type' }).objlookup('hello', {
     hello: 'world'
   }), 'world')
 })
 
 // eslint-disable-next-line max-len
 test('objlookup, should return "world", for "hello.my" and `{hello:{my:"world"}}`', () => {
-  assert.strictEqual(specmob().objlookup('hello.my', {
+  assert.strictEqual(specmob({ typeprop: 'type' }).objlookup('hello.my', {
     hello: { my: 'world' }
   }), 'world')
 })
 
 test('objlookup, should return "world", for "hello.0" and `{hello:{0:"world"}}`', () => {
-  assert.strictEqual(specmob().objlookup('hello.0', {
+  assert.strictEqual(specmob({ typeprop: 'type' }).objlookup('hello.0', {
     hello: { 0: 'world' }
   }), 'world')
 })
 
 test('regobjprop, should return an object property from the given ns', async () => {
-  const res = await promisify(specmob().retobjprop)(
+  const res = await promisify(specmob({ typeprop: 'type' }).retobjprop)(
     sess, cfg, graph, node, {
       hello: { my: 'world' }
     }, {
@@ -241,7 +249,7 @@ test('regobjprop, should return an object property from the given ns', async () 
 
 // eslint-disable-next-line max-len
 test('regobjprop, should return a opts.def if defined and object property is null or undefined from the given ns', async () => {
-  const res = await promisify(specmob().retobjprop)(
+  const res = await promisify(specmob({ typeprop: 'type' }).retobjprop)(
     sess, cfg, graph, node, {
       hello: {}
     }, {
@@ -258,7 +266,9 @@ test('regobjprop, should return a opts.def if defined and object property is nul
 })
 
 test('regobjprop, should return a values for numeric properties', async () => {
-  const res = await promisify(specmob().retobjprop)(sess, cfg, graph, node, {
+  const res = await promisify(
+    specmob({ typeprop: 'type' }).retobjprop
+  )(sess, cfg, graph, node, {
     hello: ['world']
   }, {
     type: 'objprop',
@@ -396,7 +406,9 @@ test('retcb, should throw an error if cbname function is not found', async () =>
 })
 
 test('retobj, should return a single literal value', async () => {
-  const res = await promisify(specmob().retobj)(sess, cfg, graph, node, ns, {
+  const res = await promisify(
+    specmob({ typeprop: 'type' }).retobj
+  )(sess, cfg, graph, node, ns, {
     type: 'obj',
     optarr: [{
       myprop: 'myvalue'
@@ -407,7 +419,9 @@ test('retobj, should return a single literal value', async () => {
 })
 
 test('retobj, should return multiple literal values', async () => {
-  const res = await promisify(specmob().retobj)(sess, cfg, graph, node, ns, {
+  const res = await promisify(
+    specmob({ typeprop: 'type' }).retobj
+  )(sess, cfg, graph, node, ns, {
     type: 'obj',
     optarr: [{
       myprop1: 'myvalue1'
@@ -421,6 +435,7 @@ test('retobj, should return multiple literal values', async () => {
 
 test('retobj, should obtain an array of values', async () => {
   const res = await promisify(specmob({
+    typeprop: 'type',
     specfn: {
       getmodifiedval: ([val]) => (
         `${val}modified`
@@ -466,6 +481,7 @@ test('retobj, should obtain an array of values', async () => {
 // eslint-disable-next-line max-len
 test('retoptarr, should return a new array of data from a set of dynamic patterns', async () => {
   const res = await promisify(specmob({
+    typeprop: 'type',
     specfn: {
       gettuesday: () =>
         'tuesday',
@@ -486,7 +502,8 @@ test('retoptarr, should return a new array of data from a set of dynamic pattern
 })
 
 test('retDataWHERE, should obtain a query', async () => {
-  const res = await promisify(specmob().retDataWHERE)(sess, cfg, graph, node, [{
+  const res = await promisify(specmob({ typeprop: 'type' })
+    .retDataWHERE)(sess, cfg, graph, node, [{
     type: 0,
     value: 'california'
   }, {
@@ -507,7 +524,9 @@ test('retDataWHERE, should obtain a query', async () => {
 })
 
 test('retDataWHERE, should obtain a query for multiple values', async () => {
-  const res = await promisify(specmob().retDataWHERE)(sess, cfg, graph, node, [{
+  const res = await promisify(
+    specmob({ typeprop: 'type' }).retDataWHERE
+  )(sess, cfg, graph, node, [{
     type: 0,
     value: 'california'
   }, {
@@ -530,6 +549,7 @@ test('retDataWHERE, should obtain a query for multiple values', async () => {
 
 test('applyfilterarr, should apply a sequence of filters', async () => {
   const res = await promisify(specmob({
+    typeprop: 'type',
     specfn: {
       strip: ([val]) =>
         String(val).trim(),
@@ -557,6 +577,7 @@ test('applyfilterarr, should apply a sequence of filters', async () => {
 
 test('retopt, should apply a sequence of filters', async () => {
   const res = await promisify(specmob({
+    typeprop: 'type',
     speccb: {
       requestmonthlyhoroscope: (args, opts, fn) => (
         // maybe this returns a service communication...
@@ -599,6 +620,7 @@ test('retopt, should apply a sequence of filters', async () => {
 
 test('retopt, should return error if unsupported pattern type', async () => {
   await assert.rejects(async () => promisify(specmob({
+    typeprop: 'type',
     specfn: {
       getdate: () => new Date()
     }
@@ -618,7 +640,7 @@ test('retregexp, should allow for the definition and usage of the "regexp" patte
           opts.re.test(opts.string)
       },
 
-      specmobinterpreter = specmob({ speccb, specfn })
+      specmobinterpreter = specmob({ typeprop: 'type', speccb, specfn })
 
   specmobinterpreter.retregexp = (sess, cfg, graph, node, ns, opts, fn) => {
     fn(null, new RegExp(opts.value, opts.modifiers), graph)
@@ -651,7 +673,7 @@ test('getpass, should evaluate `true` for a pattern that is true', async () => {
           (String(val).length - 1) >= opts.length
       },
 
-      specmobinterpreter = specmob({ speccb, specfn })
+      specmobinterpreter = specmob({ typeprop: 'type', speccb, specfn })
 
   // eslint-disable-next-line max-len
   const ispass = await new Promise(resolve => specmobinterpreter.getpass(sess, cfg, graph, node, {
@@ -694,7 +716,7 @@ test('getpass, should evaluate `true` for a pattern with a callback that is true
     isgtlength: ([val], opts) =>
       (String(val).length - 1) >= opts.length
   }
-  const specmobinterpreter = specmob({ speccb, specfn })
+  const specmobinterpreter = specmob({ typeprop: 'type', speccb, specfn })
 
   // eslint-disable-next-line max-len
   const ispass = await new Promise(resolve => specmobinterpreter.getpass(sess, cfg, graph, node, {
@@ -736,7 +758,7 @@ test('getpass, should evaluate `false` for a pattern that is false', async () =>
           (String(val).length - 1) >= opts.length
       },
 
-      specmobinterpreter = specmob({ speccb, specfn })
+      specmobinterpreter = specmob({ typeprop: 'type', speccb, specfn })
 
   // eslint-disable-next-line max-len
   const ispass = await new Promise(resolve => specmobinterpreter.getpass(sess, cfg, graph, node, {
@@ -779,7 +801,7 @@ test('getpass, should return given errkey (if defined) for pattern that evaluate
           (String(val).length - 1) >= opts.length
       },
 
-      specmobinterpreter = specmob({ speccb, specfn })
+      specmobinterpreter = specmob({ typeprop: 'type', speccb, specfn })
 
   const errkey = await promisify(specmobinterpreter.getpass)(sess, cfg, graph, node, {
     testvalue: 'notlong'

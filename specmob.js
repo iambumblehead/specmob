@@ -153,9 +153,10 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   // to compose the object 'cumval', returning a result that is merged with
   // cumval or is defined on cumval.
   o.valfinish = (cumval, spec, val) => {
-    if (spec.spread === true ||
-        spec[o.typeprop] === undefined ||
-        spec[o.typeprop] === 'opts') {
+    if ((spec.spread === true
+      || spec.type === undefined
+      || spec.type === 'opts'
+    ) && check.isobj(val)) {
       cumval = Object.assign(cumval, val)
     } else if (o.isvalidspecprop(spec.name)) {
       cumval[spec.name] = val

@@ -17,9 +17,13 @@ const AND = 'AND'
 const OR = 'OR'
 const win = (typeof window === 'object' ? window : this) || {}
 
+const isLookObj = ((getproto, objproto = getproto({})) =>
+  obj => obj && (getproto(obj) === objproto)
+)(Object.getPrototypeOf)
+
 const stringify = obj => (
-  /string|boolean|number/.test(typeof obj)
-    ? obj : JSON.stringify(obj, null, '  '))
+  isLookObj(obj) || Array.isArray(obj)
+    ? JSON.stringify(obj, null, '  ') : obj)
 
 const specmoberr_invalidcbname = name => new Error(
   `invalid: cbname “${name}”`)
@@ -52,9 +56,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   o.getnodekey = node =>
     node && typeof node.get === 'function' && node.get('key')
 
-  o.stringify = obj => (
-    /string|boolean|number/.test(typeof obj)
-      ? obj : JSON.stringify(obj, null, '  '))
+  o.stringify = stringify
 
   o.specerr = ({
     isfatal = true,

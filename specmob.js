@@ -53,7 +53,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
       : null
   }
 
-  o.getnodekey = node =>
+  o.nodegetkey = node =>
     node && typeof node.get === 'function' && node.get('key')
 
   o.stringify = stringify
@@ -119,7 +119,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
     win.errnode = node
     console.error('errgraph: ', graph && graph.toJS && graph.toJS())
     console.error('errnode: ', node && node.toJS && node.toJS())
-    o.throw(o.getnodekey(node), ...args)
+    o.throw(o.nodegetkey(node), ...args)
   }
 
   o.throw_namespaceundefined = (graph, node, ns, opts) => (
@@ -425,7 +425,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
     fnguard.isobj(sess, cfg, graph, node).isany(ns).isfn(fn)
 
     let optarr = Array.isArray(opt) ? opt : (opt || {}).optarr || [],
-        nodekey = o.getnodekey(node)
+        nodekey = o.nodegetkey(node)
 
     if (!Array.isArray(optarr)) {
       return fn(specmoberr_valisnotarr(optarr))

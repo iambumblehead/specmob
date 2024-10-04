@@ -130,6 +130,16 @@ test('valfinish/8 should return opts.def string definition', async () => {
   assert.strictEqual(res, 'def')
 })
 
+test('valfinish/8 should return opts.def boolean definition', async () => {
+  const res = await promisify(
+    specmob({ typeprop: 'type' }).valordefval
+  )(sess, cfg, graph, node, ns, {
+    def: false
+  }, null)
+
+  assert.strictEqual(res, false)
+})
+
 test('valfinish/8 should return opts.def spec definition', async () => {
   const res = await promisify(
     specmob({ typeprop: 'type' }).valordefval

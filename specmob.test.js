@@ -11,7 +11,8 @@ const node = {
 }
 const graph = {
   graph: 'graph',
-  get: () => node
+  get: () => node,
+  has: key => key === '/'
 }
 const sess = { sess: 'sess' }
 const opts = { opts: 'opts' }
@@ -313,6 +314,33 @@ test('retfn, should return a function value (async)', async () => {
   })
 
   assert.strictEqual(res, 'worldmodified')
+})
+
+test('retfn, should return multiple values (async) if [, graph]', async () => {
+  const specmobinst = specmob({
+    specfn: {
+      // use 'cb' to return multiple values
+      getmodifiedval: async ([val], opts, sess, cfg, graph, node, cb) => (
+        cb(`${val}modified`, Object.assign({ updated: true }, graph)))
+    }
+  })
+
+  return new Promise((resolve, error) => {
+    specmobinst.retfn(sess, cfg, graph, node, {
+      hello: 'world'
+    }, {
+      type: 'fn',
+      fnname: 'getmodifiedval',
+      args: ['ns.hello']
+    }, (err, res, graph) => {
+      if (err) return error(err)
+
+      assert.ok(graph)
+      assert.strictEqual(graph.updated, true)
+
+      resolve(res)
+    })
+  })
 })
 
 test('retfn, should throw an error if named-property fnname is not present', async () => {

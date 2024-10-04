@@ -21,6 +21,10 @@ const isLookObj = ((getproto, objproto = getproto({})) =>
   obj => obj && (getproto(obj) === objproto)
 )(Object.getPrototypeOf)
 
+const isgraph = graph => Boolean(
+  typeof graph === 'object' && graph &&
+    typeof graph.has === 'function' && graph.has('/'))
+
 const stringify = obj => (
   isLookObj(obj) || Array.isArray(obj)
     ? JSON.stringify(obj, null, '  ') : obj)
@@ -40,6 +44,8 @@ const specmoberr_valisnotarr = optarr => new Error(
 const specmoberr_propundefined = spec => new Error(
   `invalid spec definition, "prop" required: ${stringify(spec)}`)
 
+const fnres_multival = (val, graph) => ([val, graph])
+
 export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   // allow speccb and specfn to be accessed directly from created
   // spec system w/out need of constructing any pattern
@@ -53,7 +59,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
       : null
   }
 
-  o.getnodekey = node =>
+  o.nodegetkey = node =>
     node && typeof node.get === 'function' && node.get('key')
 
   o.stringify = stringify
@@ -76,9 +82,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   o.isinsterr = err => Boolean(
     err instanceof Error)
 
-  o.isgraph = graph => Boolean(
-    typeof graph === 'object' && graph &&
-      typeof graph.has === 'function')
+  o.isgraph = isgraph
 
   // err may be,
   //  * pre-populated err object
@@ -119,7 +123,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
     win.errnode = node
     console.error('errgraph: ', graph && graph.toJS && graph.toJS())
     console.error('errnode: ', node && node.toJS && node.toJS())
-    o.throw(o.getnodekey(node), ...args)
+    o.throw(o.nodegetkey(node), ...args)
   }
 
   o.throw_namespaceundefined = (graph, node, ns, opts) => (
@@ -329,21 +333,25 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   //
   o.callfn = (sess, cfg, graph, node, args, opts, spec, fn) => {
     const func = o.getfn(spec.fnname)
-    if (!func) {
+    if (typeof func !== 'function') {
       return fn(specmoberr_invalidfnname(spec.fnname))
     }
 
-    if (func && func.constructor && func.constructor.name === 'AsyncFunction') {
-      func(args, opts, sess, cfg, graph, node).then(fin => (
+    if (func.constructor.name === 'AsyncFunction') {
+      func(args, opts, sess, cfg, graph, node, fnres_multival).then(fin => (
         o.isinsterr(fin)
           ? o.emiterr(sess, cfg, graph, node, fin, fin, fn)
-          : fn(null, fin, graph)))
+          : (func.length >= 7 && Array.isArray(fin)
+            ? fn(null, fin[0], fin[1])
+            : fn(null, fin, graph))))
         .catch(e => fn(e))
     } else {
-      const fin = func(args, opts, sess, cfg, graph, node)
+      const fin = func(args, opts, sess, cfg, graph, node, fnres_multival)
       return o.isinsterr(fin)
         ? o.emiterr(sess, cfg, graph, node, fin, fin, fn)
-        : fn(null, fin, graph)
+        : (func.length >= 7 && Array.isArray(fin)
+          ? fn(null, fin[0], fin[1])
+          : fn(null, fin, graph))
     }
   }
 
@@ -425,7 +433,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
     fnguard.isobj(sess, cfg, graph, node).isany(ns).isfn(fn)
 
     let optarr = Array.isArray(opt) ? opt : (opt || {}).optarr || [],
-        nodekey = o.getnodekey(node)
+        nodekey = o.nodegetkey(node)
 
     if (!Array.isArray(optarr)) {
       return fn(specmoberr_valisnotarr(optarr))

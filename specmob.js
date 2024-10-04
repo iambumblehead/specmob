@@ -184,8 +184,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
       .isany(node, ns, val)
       .isfn(fn)
 
-    if ((val === null ||
-         val === undefined) && opts.def !== undefined) {
+    if ((val === null || val === undefined) && opts.def !== undefined) {
       o.retopt(sess, cfg, graph, node, ns, opts.def, fn)
     } else {
       fn(null, val, graph)
@@ -512,8 +511,10 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
     fnguard.isobj(sess, cfg, graph).isany(ns, opts, node).isfn(fn)
 
     const typeofstr = typeof opts
-    if ((typeofstr === 'string' || typeofstr === 'number')
-        || (opts && opts.spread)) {
+    if ((typeofstr === 'boolean'
+      || typeofstr === 'string'
+      || typeofstr === 'number')
+      || (opts && opts.spread)) {
       return fn(null, opts, graph)
     } else if (!opts) {
       return fn(null, null, graph)

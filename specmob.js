@@ -180,7 +180,8 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   //
   o.valordefval = (sess, cfg, graph, node, ns, opts, val, fn) => {
     fnguard
-      .isobj(sess, cfg, graph, opts)
+      .isobjlike(graph)
+      .isobj(sess, cfg, opts)
       .isany(node, ns, val)
       .isfn(fn)
 
@@ -278,7 +279,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   //   'world'
   //
   o.retobjprop = (sess, cfg, graph, node, ns, opts, fn) => {
-    fnguard.isobj(sess, cfg, graph, node, opts).isany(ns)
+    fnguard.isobjlike(graph, node).isobj(sess, cfg, opts).isany(ns)
 
     if (check.isundefined(opts.prop)) {
       return fn(specmoberr_propundefined(opts))
@@ -303,8 +304,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   //   1488110309443
   //
   o.retfn = (sess, cfg, graph, node, ns, spec, fn) => {
-    fnguard.isobj(sess, cfg, graph, node, spec)
-      .isany(ns).isfn(fn)
+    fnguard.isobjlike(graph, node).isobj(sess, cfg, spec).isany(ns).isfn(fn)
 
     let args
 
@@ -370,8 +370,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   o.retcb = (sess, cfg, graph, node, ns, spec, fn) => {
     let args
 
-    fnguard.isobj(sess, cfg, graph, node, spec)
-      .isany(ns).isfn(fn)
+    fnguard.isobjlike(graph, node).isobj(sess, cfg, spec).isany(ns).isfn(fn)
 
     o.getopts(sess, cfg, graph, node, ns, spec, (err, opts, graph) => {
       if (err) return fn(err)
@@ -429,7 +428,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   //   }
   //
   o.retobj = (sess, cfg, graph, node, ns, opt, fn) => {
-    fnguard.isobj(sess, cfg, graph, node).isany(ns).isfn(fn)
+    fnguard.isobjlike(graph, node).isobj(sess, cfg).isany(ns).isfn(fn)
 
     let optarr = Array.isArray(opt) ? opt : (opt || {}).optarr || [],
         nodekey = o.nodegetkey(node)
@@ -478,7 +477,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   //   ['tuesday', 'wednesday']
   //
   o.retoptarr = (sess, cfg, graph, node, ns, opts, fn) => {
-    fnguard.isobj(sess, cfg, graph, node, ns, opts).isfn(fn)
+    fnguard.isobjlike(graph, node).isobj(sess, cfg, ns, opts).isfn(fn)
 
     ;(function next (x, len, specarr, graph, resarr) {
       if (x >= len) return fn(null, resarr, graph) // no errors
@@ -508,7 +507,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   //   literal, fn, optarr,
   //   objarr, method
   o.retopt = (sess, cfg, graph, node, ns, opts, fn) => {
-    fnguard.isobj(sess, cfg, graph).isany(ns, opts, node).isfn(fn)
+    fnguard.isobjlike(graph).isobj(sess, cfg).isany(ns, opts, node).isfn(fn)
 
     const typeofstr = typeof opts
     if ((typeofstr === 'boolean'
@@ -542,7 +541,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   //
   // *slow* pushes entire into the final array whos value matches
   o.retDataWHERE = (sess, cfg, graph, node, basearr = [], ns, query, fn) => {
-    fnguard.isobj(sess, cfg, graph, ns, query).isfn(fn)
+    fnguard.isobjlike(graph).isobj(sess, cfg, ns, query).isfn(fn)
 
     let { basekey, keyarr = [] } = query,
         casttype
@@ -600,7 +599,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   //    with spec.opts to a new object
   //
   o.getopts = (sess, cfg, graph, node, ns, spec, fn) => {
-    fnguard.isobj(sess, cfg, graph, node, spec).isany(ns).isfn(fn)
+    fnguard.isobjlike(graph, node).isobj(sess, cfg, spec).isany(ns).isfn(fn)
 
     if (spec.optarr) {
       o.retobj(sess, cfg, graph, node, ns, spec, (err, opts, graph) => {
@@ -630,7 +629,8 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   // applies a series of mutations to a value...
   //
   o.applyfilterarr = (sess, cfg, graph, node, ns, val, filterarr = [], fn) => {
-    fnguard.isobj(sess, cfg, graph, node).isany(ns).isarr(filterarr).isfn(fn)
+    fnguard.isobjlike(graph, node)
+      .isobj(sess, cfg).isany(ns).isarr(filterarr).isfn(fn)
 
     ;(function next (filterarr, x, len, graph, prev) {
       if (x >= len) return fn(null, prev.val, graph)
@@ -644,7 +644,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   }
 
   o.whenAND = (sess, cfg, graph, node, ns, whenarr, fn) => {
-    fnguard.isobj(sess, cfg, graph, node).isany(ns).isfn(fn)
+    fnguard.isobjlike(graph, node).isobj(sess, cfg).isany(ns).isfn(fn)
 
     ;(function next (x, len) {
       if (x >= len) return fn(null, null) // no errors
@@ -659,7 +659,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   }
 
   o.whenOR = (sess, cfg, graph, node, ns, whenarr, fn) => {
-    fnguard.isobj(sess, cfg, graph, node).isany(ns).isfn(fn)
+    fnguard.isobjlike(graph, node).isobj(sess, cfg).isany(ns).isfn(fn)
 
     ;(function next (x, len, errorMessage) {
       if (x >= len) return fn(null, errorMessage)
@@ -675,7 +675,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   }
 
   o.geterror = (sess, cfg, graph, node, ns, spec, fn) => {
-    fnguard.isobj(sess, cfg, graph, spec, ns).isfn(fn)
+    fnguard.isobjlike(graph).isobj(sess, cfg, spec, ns).isfn(fn)
 
     switch(spec[o.typeprop]) {
     case AND:

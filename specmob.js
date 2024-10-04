@@ -184,9 +184,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
       .isany(node, ns, val)
       .isfn(fn)
 
-    if ((val === null ||
-      val === undefined) && opts.def !== undefined) {
-        console.log('returning default...', opts.def)
+    if ((val === null || val === undefined) && opts.def !== undefined) {
       o.retopt(sess, cfg, graph, node, ns, opts.def, fn)
     } else {
       fn(null, val, graph)

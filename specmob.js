@@ -17,17 +17,20 @@ const AND = 'AND'
 const OR = 'OR'
 const win = (typeof window === 'object' ? window : this) || {}
 
-const isLookObj = ((getproto, objproto = getproto({})) =>
-  obj => obj && (getproto(obj) === objproto)
-)(Object.getPrototypeOf)
+const isPlainObj = ((toString, objproto = toString.call({})) =>
+  obj => obj && (toString.call(obj) === objproto)
+)(Object.prototype.toString)
 
 const isgraph = graph => Boolean(
   typeof graph === 'object' && graph &&
     typeof graph.has === 'function' && graph.has('/'))
 
 const stringify = obj => (
-  isLookObj(obj) || Array.isArray(obj)
+  Array.isArray(obj) || isPlainObj(obj)
     ? JSON.stringify(obj, null, '  ') : obj)
+
+const specmoberr_specfnorcbnotfound = (fnorcb, name) => new Error(
+  `undefined: spec${fnorcb}, ${fnorcb}name “${name}” unavailable`)
 
 const specmoberr_invalidcbname = name => new Error(
   `invalid: cbname “${name}”`)
@@ -52,9 +55,8 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   o.fn = specfn
   o.cb = speccb
   o.typeprop = typeprop || 'type'
-
   o.objgetfn = (obj, name) => {
-    return (name in obj && typeof obj[name] === 'function')
+    return (obj && name in obj && typeof obj[name] === 'function')
       ? obj[name]
       : null
   }
@@ -312,7 +314,8 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
       if (err) return fn(err)
 
       try {
-        args = o.getargs(sess, graph, node, spec, ns, opts)
+        // TODO phase-out. if argsdyn, skip
+        args = spec.argsdyn ? opts : o.getargs(sess, graph, node, spec, ns)
       } catch (e) {
         return fn(e)
       }
@@ -333,7 +336,9 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   o.callfn = (sess, cfg, graph, node, args, opts, spec, fn) => {
     const func = o.getfn(spec.fnname)
     if (typeof func !== 'function') {
-      return fn(specmoberr_invalidfnname(spec.fnname))
+      return specfn
+        ? fn(specmoberr_invalidfnname(spec.fnname))
+        : fn(specmoberr_specfnorcbnotfound('fn', spec.fnname))
     }
 
     if (func.constructor.name === 'AsyncFunction') {
@@ -376,7 +381,8 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
       if (err) return fn(err)
 
       try {
-        args = o.getargs(sess, graph, node, spec, ns)
+        // TODO phase-out. if argsdyn, skip
+        args = spec.argsdyn ? opts : o.getargs(sess, graph, node, spec, ns)
       } catch (e) {
         return fn(e)
       }
@@ -397,7 +403,9 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   o.callcb = (sess, cfg, graph, node, args, opts, spec, fn) => {
     const func = o.getcb(spec.cbname)
     if (!func) {
-      return fn(specmoberr_invalidcbname(spec.cbname))
+      return speccb
+        ? fn(specmoberr_invalidcbname(spec.cbname))
+        : fn(specmoberr_specfnorcbnotfound('cb', spec.cbname))
     }
 
     func(args, opts, (err, fin, ngraph = graph) => (
@@ -601,7 +609,20 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   o.getopts = (sess, cfg, graph, node, ns, spec, fn) => {
     fnguard.isobjlike(graph, node).isobj(sess, cfg, spec).isany(ns).isfn(fn)
 
-    if (spec.optarr) {
+    if (spec.argsdyn && spec.args) {
+      (function next (args, argsdyn, graph) {
+        if (!argsdyn.length)
+          return fn(null, args, graph)
+
+        o.retobj(sess, cfg, graph, node, ns, args[argsdyn[0]], (err, res, graph) => {
+          if (err) return fn(err)
+
+          args[argsdyn[0]] = res
+
+          next(args, argsdyn.slice(1), graph)
+        })
+      })(spec.args.slice(), spec.argsdyn.slice(), graph)
+    } else if (spec.optarr) {
       o.retobj(sess, cfg, graph, node, ns, spec, (err, opts, graph) => {
         if (err) return fn(err)
         // copy to spec.opts if exists

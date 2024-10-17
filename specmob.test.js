@@ -383,7 +383,7 @@ test('retfn, should throw an error if fnname function is not found', async () =>
     fnname: 'getmodifiedval',
     args: ['ns.hello']
   }, e => { throw e }), {
-    message: 'Cannot use \'in\' operator to search for \'getmodifiedval\' in undefined'
+    message: 'undefined: specfn, fnname “getmodifiedval” unavailable'
   })
 })
 
@@ -439,7 +439,7 @@ test('retcb, should throw an error if cbname function is not found', async () =>
     cbname: 'getmodifiedval',
     args: ['ns.hello']
   }, e => { throw e }), {
-    message: 'Cannot use \'in\' operator to search for \'getmodifiedval\' in undefined'
+    message: 'undefined: speccb, cbname “getmodifiedval” unavailable'
   })
 })
 
@@ -869,15 +869,99 @@ test('getpass, should return given errkey (if defined) for pattern that evaluate
   assert.strictEqual(errkey, 'notlongenough')
 })
 
-// cfg.spec.getargs
-// cfg.spec.getfn
-// cfg.spec.callfn
-// cfg.spec.getfiltered
-// cfg.spec.retDataWHERE
-// cfg.spec.retobj
-// cfg.spec.retopt
-// cfg.spec.getopts
-// cfg.spec.getpass
-// cfg.spec.isvalidspec
-// cfg.spec.valfinish
+test('retopt, should apply complex args, nested filters', async () => {
+  const state = {}
+  const specmobinst = specmob({
+    typeprop: 'gn:type',
+    specfn: {
+      isnottrue: ([val]) => {
+        return !val
+      },
+      applysubj: args => {
+        state.fnargs = args
+        return true
+      }
+    },
+    speccb: {
+      applysubj: (args, opts, fn) => (
+        state.cpargs = args,
 
+        fn(null, Object.assign({ updated: true }, { graph: true })))
+    }
+  })
+
+  const argslistwithspec = [
+    '/datatodos',
+    {
+      'gn:type': 'obj',
+      optarr: [{
+        'gn:type': 'obj',
+        name: 'ns',
+        optarr: [{
+          'gn:type': 'objprop',
+          name: 'iscompleted',
+          prop: 'subj.value',
+          filterinarr: [{
+            'gn:type': 'fn',
+            args: ['this'],
+            fnname: 'isnottrue'
+          }]
+        }]
+      }]
+    }
+  ]
+
+  const retcb = new Promise((resolve, error) => {
+    specmobinst.retcb(sess, cfg, graph, node, {
+      subj: {
+        value: 'world'
+      }
+    }, {
+      cbname: 'applysubj',
+      'gn:type': 'cb',
+      argsdyn: [1],
+      args: argslistwithspec
+    }, (err, res, graph) => {
+      if (err) return error(err)
+
+      assert.ok(graph)
+
+      resolve(res)
+    })
+  })
+
+  const retfn = new Promise((resolve, error) => {
+    specmobinst.retfn(sess, cfg, graph, node, {
+      subj: {
+        value: 'world'
+      }
+    }, {
+      fnname: 'applysubj',
+      'gn:type': 'fn',
+      argsdyn: [1],
+      args: argslistwithspec
+    }, (err, res, graph) => {
+      if (err) return error(err)
+
+      assert.ok(graph)
+
+      resolve(res)
+    })
+  })
+
+  await retcb
+  await retfn
+
+  assert.deepStrictEqual(state, {
+    cpargs: ['/datatodos', {
+      ns: {
+        iscompleted: false
+      }
+    }],
+    fnargs: ['/datatodos', {
+      ns: {
+        iscompleted: false
+      }
+    }]
+  })
+})

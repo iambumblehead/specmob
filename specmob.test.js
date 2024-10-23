@@ -201,6 +201,32 @@ test('getargs should support custom namespace re', () => {
   assert.strictEqual(args[2], 'val0')
 })
 
+test('should throw error if spec resolves `undefined`', async () => {
+  const specmobinst = specmob({ nsre: /^(subj)\./, typeprop: 'type' })
+
+  await assert.rejects(async () => specmobinst.getargs(sess, graph, node, {
+    args: ['subj.prop', 'this']
+  }, {
+    this: 'val0',
+    subj: { differentprop: 'val1' }
+  }), {
+    message: specmobinst.specresolvesundefined({
+      args: ["subj.prop", "this"]
+    }, {
+      this: 'val0',
+      subj: { differentprop: 'val1' }
+    }).message
+  })
+
+  await assert.rejects(async () => (
+    promisify(specmobinst.valordefval)(
+      sess, cfg, graph, node, ns, opts, undefined)
+  ), {
+    message: specmobinst
+      .specresolvesundefined(opts, ns).message
+  })
+})
+
 test('getargs should return a list of args from the given ns', () => {
   let args = specmob({ typeprop: 'type' }).getargs(sess, graph, node, {
     args: ['ns.prop1', 'ns.prop2', 'this']

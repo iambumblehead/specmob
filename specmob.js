@@ -118,10 +118,9 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   }
 
   o.emiterr = (sess, cfg, graph, node, err, val, fn, specerr) => (
-    typeof specerrfn === 'function'
-  ) ? specerrfn(sess, cfg, graph, node, specerr = o.geterr(err), (err, graph) => {
-    if (!specerr.isfatal) fn(null, val, graph)
-  }) : (() => { throw new Error(stringify(specerr || {})) })()
+    specerrfn(sess, cfg, graph, node, specerr = o.geterr(err), (err, graph) => {
+      if (!specerr.isfatal) fn(null, val, graph)
+    }))
 
   o.throw = (...args) => {
     console.error('[!!!] specmob: ', ...args)

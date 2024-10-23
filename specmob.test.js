@@ -356,7 +356,7 @@ test('retfn, should return multiple values (async) if [, graph]', async () => {
   const specmobinst = specmob({
     specfn: {
       // use 'cb' to return multiple values
-      getmodifiedval: async ([val], opts, sess, cfg, graph, node, cb) => (
+      getmodifiedval: async ([val], sess, cfg, graph, node, cb) => (
         cb(`${val}modified`, Object.assign({ updated: true }, graph)))
     }
   })
@@ -420,7 +420,7 @@ test('retcb, should return a callback value', async () => {
 
   const res = await promisify(specmob({
     speccb: {
-      getmodifiedval: ([val], opts, fn) => (
+      getmodifiedval: ([val], fn) => (
         fn(null, `${val}modified`)
       )
     }
@@ -643,7 +643,7 @@ test('retopt, should apply a sequence of filters', async () => {
   const res = await promisify(specmob({
     typeprop: 'type',
     speccb: {
-      requestmonthlyhoroscope: (args, opts, fn) => (
+      requestmonthlyhoroscope: ([opts], fn) => (
         // maybe this returns a service communication...
         opts.thismonth % 2
           ? fn(null, 'you have good luck this month!')
@@ -653,7 +653,7 @@ test('retopt, should apply a sequence of filters', async () => {
     specfn: {
       getdate: () =>
         new Date(),
-      getmonthfromdate: (args, opts) => {
+      getmonthfromdate: ([opts]) => {
         let month = opts.date.getMonth() + 1
 
         return opts.format === 'mm'
@@ -662,21 +662,29 @@ test('retopt, should apply a sequence of filters', async () => {
       }
     }
   }).retopt)(sess, cfg, graph, node, ns, {
-    optarr: [{
-      optarr: [{
-        format: 'mm'
-      }, {
-        type: 'fn',
-        fnname: 'getdate',
-        name: 'date'
-      }],
-      type: 'fn',
-      fnname: 'getmonthfromdate',
-      name: 'monthnumber'
-    }],
     type: 'cb',
     cbname: 'requestmonthlyhoroscope',
-    name: 'horoscope'
+    name: 'horoscope',
+    argsdyn: [0],
+    args: [{
+      type: 'obj',
+      optarr: [{
+        type: 'fn',
+        fnname: 'getmonthfromdate',
+        name: 'monthnumber',
+        argsdyn: [0],
+        args: [{
+          type: 'obj',
+          optarr: [{
+            format: 'mm'
+          }, {
+            type: 'fn',
+            fnname: 'getdate',
+            name: 'date'
+          }]
+        }]
+      }]
+    }]
   })
 
   assert.strictEqual(res.startsWith('you have '), true)
@@ -700,7 +708,7 @@ test('retopt, should return error if unsupported pattern type', async () => {
 test('retregexp, should allow for the definition and usage of the "regexp" pattern', async () => {
   let speccb = {},
       specfn = {
-        isregexp: (args, opts) =>
+        isregexp: ([opts]) =>
           opts.re.test(opts.string)
       },
 
@@ -711,18 +719,22 @@ test('retregexp, should allow for the definition and usage of the "regexp" patte
   }
 
   const res = await promisify(specmobinterpreter.retopt)(sess, cfg, graph, node, ns, {
-    optarr: [{
-      type: 'regexp',
-      value: '^hello',
-      modifiers: '',
-      name: 're'
-    }, {
-      type: 'literal',
-      value: 'hello at beginning of string',
-      name: 'string'
-    }],
     type: 'fn',
-    fnname: 'isregexp'
+    fnname: 'isregexp',
+    argsdyn: [0],
+    args: [{
+      type: 'obj',
+      optarr: [{
+        type: 'regexp',
+        value: '^hello',
+        modifiers: '',
+        name: 're'
+      }, {
+        type: 'literal',
+        value: 'hello at beginning of string',
+        name: 'string'
+      }]
+    }]
   })
 
   assert.strictEqual(res, true)
@@ -733,7 +745,7 @@ test('getpass, should evaluate `true` for a pattern that is true', async () => {
       specfn = {
         isstring: ([val]) =>
           typeof val === 'string',
-        isgtlength: ([val], opts) =>
+        isgtlength: ([val, opts]) =>
           (String(val).length - 1) >= opts.length
       },
 
@@ -759,8 +771,7 @@ test('getpass, should evaluate `true` for a pattern that is true', async () => {
     }, {
       type: 'fn',
       fnname: 'isgtlength',
-      opts: { length: 4 },
-      args: ['testvalue'],
+      args: ['testvalue', { length: 4 }],
       errkey: 'notlongenough'
     }]
   }, (err, errmsg, ispass) => {
@@ -773,11 +784,11 @@ test('getpass, should evaluate `true` for a pattern that is true', async () => {
 // eslint-disable-next-line max-len
 test('getpass, should evaluate `true` for a pattern with a callback that is true', async () => {
   const speccb = {
-    isstring: ([val], opts, fn) => fn(null, typeof val === 'string')
+    isstring: ([val], fn) => fn(null, typeof val === 'string')
   }
   const specfn = {
     isstring: ([val]) => typeof val === 'string',
-    isgtlength: ([val], opts) =>
+    isgtlength: ([val, opts]) =>
       (String(val).length - 1) >= opts.length
   }
   const specmobinterpreter = specmob({ typeprop: 'type', speccb, specfn })
@@ -802,8 +813,7 @@ test('getpass, should evaluate `true` for a pattern with a callback that is true
     }, {
       type: 'fn',
       fnname: 'isgtlength',
-      opts: { length: 4 },
-      args: ['testvalue'],
+      args: ['testvalue', { length: 4 }],
       errkey: 'notlongenough'
     }]
   }, (err, errmsg, ispass) => {
@@ -909,7 +919,7 @@ test('retopt, should apply complex args, nested filters', async () => {
       }
     },
     speccb: {
-      applysubj: (args, opts, fn) => (
+      applysubj: (args, fn) => (
         state.cpargs = args,
 
         fn(null, Object.assign({ updated: true }, { graph: true })))
@@ -991,3 +1001,4 @@ test('retopt, should apply complex args, nested filters', async () => {
     }]
   })
 })
+

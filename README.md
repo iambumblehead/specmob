@@ -24,21 +24,29 @@ This pattern returns the product of a function named 'sayhello',
 Nested and grouped patterns describe complex operations. This pattern resolves a monthly horoscope using the two-digit representation of the current month. "fn" stands for "function" and "cb" stands for "callback".
 ```javascript
 ({
-  optarr: [{
-    optarr: [{
-      format: 'mm'
-    },{
-      type: 'fn',
-      fnname: 'getdate',
-      name: 'date'
-    }],
-    type: 'fn',
-    fnname: 'getmonthfromdate',
-    name: 'monthnumber'
-  }],
   type: 'cb',
   cbname: 'requestmonthlyhoroscope',
-  name: 'horoscope'
+  name: 'horoscope',
+  argsdyn: [0],
+  args: [{
+    type: 'obj',
+    optarr: [{
+      type: 'fn',
+      fnname: 'getmonthfromdate',
+      name: 'monthnumber',
+      argsdyn: [0],
+      args: [{
+        type: 'obj',
+        optarr: [{
+          format: 'mm'
+        }, {
+          type: 'fn',
+          fnname: 'getdate',
+          name: 'date'
+        }]
+      }]
+    }]
+  }]
 })
 ```
 
@@ -49,10 +57,10 @@ Nested and grouped patterns describe complex operations. This pattern resolves a
 
 ```javascript
 const functions = {
-  getdate: ([val], opts) =>
+  getdate: ([val]) =>
     new Date(),
 
-  getmonthfromdate: ([val], opts) => {
+  getmonthfromdate: ([val, opts]) => {
     const month = opts.date.getMonth() + 1
 
     return opts.format === 'mm'
@@ -62,7 +70,7 @@ const functions = {
 }
 
 const callbacks = {
-  requestmonthlyhoroscope: ([val], opts, fn) => (
+  requestmonthlyhoroscope: ([val], fn) => (
     // callback this returns a service communication...
     opts.thismonth % 2
       ? fn(null, 'you have good luck this month!')
@@ -109,11 +117,11 @@ these parameters are passed to the internal and external functions used by the i
 
 ```javascript
 const functions = {
-  getdate: ([val], opts, sess, cfg, graph, node) =>
+  getdate: ([val], sess, cfg, graph, node) =>
     new Date()
 }
 const callbacks = {
-  getdate: ([val], opts, fn, sess, cfg, graph, node) =>
+  getdate: ([val], fn, sess, cfg, graph, node) =>
     fn(null, new Date())
 }
 ```
@@ -135,7 +143,7 @@ an example that constructs the interpreter, then adds support for the regexp pat
 ```javascript
 const callbacks = {}
 const functions = {
-  isregexp: ([val], opts, sess, cfg, graph, node) =>
+  isregexp: ([val], sess, cfg, graph, node) =>
     opts.re.test(opts.string)
 }
 
@@ -171,9 +179,9 @@ Validation patterns can be used as well. When validation fails it will return fa
 ```javascript
 const callbacks = {}
 const functions = {
-  isstring: ([val], opts, sess, cfg, graph, node) =>
+  isstring: ([val], sess, cfg, graph, node) =>
     typeof val === 'string',
-  isgtlength: ([val], opts, sess, cfg, graph, node) =>
+  isgtlength: ([val], sess, cfg, graph, node) =>
     (String(val).length - 1) >= opts.length
 }
 

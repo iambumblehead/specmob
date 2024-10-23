@@ -331,7 +331,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
         return fn(e)
       }
 
-      o.callfn(sess, cfg, graph, node, args, opts, spec, (err, fin, graph) => {
+      o.callfn(sess, cfg, graph, node, args, spec, (err, fin, graph) => {
         if (err) return fn(err)
 
         o.valordefval(sess, cfg, graph, node, ns, spec, fin, fn)
@@ -344,7 +344,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   // standard: (sess, cfg, graph, node, ..., fn)
   //       cb: (args, opts, fn, sess, cfg, graph, node)
   //
-  o.callfn = (sess, cfg, graph, node, args, opts, spec, fn) => {
+  o.callfn = (sess, cfg, graph, node, args, spec, fn) => {
     const func = o.getfn(spec.fnname)
     if (typeof func !== 'function') {
       return specfn
@@ -353,18 +353,18 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
     }
 
     if (func.constructor.name === 'AsyncFunction') {
-      func(args, opts, sess, cfg, graph, node, fnres_multival).then(fin => (
+      func(args, sess, cfg, graph, node, fnres_multival).then(fin => (
         o.isinsterr(fin)
           ? o.emiterr(sess, cfg, graph, node, fin, fin, fn)
-          : (func.length >= 7 && Array.isArray(fin)
+          : (func.length >= 6 && Array.isArray(fin)
             ? fn(null, fin[0], fin[1])
             : fn(null, fin, graph))))
         .catch(e => fn(e))
     } else {
-      const fin = func(args, opts, sess, cfg, graph, node, fnres_multival)
+      const fin = func(args, sess, cfg, graph, node, fnres_multival)
       return o.isinsterr(fin)
         ? o.emiterr(sess, cfg, graph, node, fin, fin, fn)
-        : (func.length >= 7 && Array.isArray(fin)
+        : (func.length >= 6 && Array.isArray(fin)
           ? fn(null, fin[0], fin[1])
           : fn(null, fin, graph))
     }
@@ -398,7 +398,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
         return fn(e)
       }
 
-      o.callcb(sess, cfg, graph, node, args, opts, spec, (err, fin, graph) => {
+      o.callcb(sess, cfg, graph, node, args, spec, (err, fin, graph) => {
         if (err) return fn(err)
 
         o.valordefval(sess, cfg, graph, node, ns, spec, fin, fn)
@@ -411,7 +411,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   // standard: (sess, cfg, graph, node, ..., fn)
   //       cb: (args, opts, fn, sess, cfg, graph, node)
   //
-  o.callcb = (sess, cfg, graph, node, args, opts, spec, fn) => {
+  o.callcb = (sess, cfg, graph, node, args, spec, fn) => {
     const func = o.getcb(spec.cbname)
     if (!func) {
       return speccb
@@ -419,7 +419,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
         : fn(specmoberr_specfnorcbnotfound('cb', spec.cbname))
     }
 
-    func(args, opts, (err, fin, ngraph = graph) => (
+    func(args, (err, fin, ngraph = graph) => (
       err
         ? o.emiterr(sess, cfg, ngraph, node, err, fin, fn)
         : fn(null, fin, ngraph)

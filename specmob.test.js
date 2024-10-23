@@ -420,7 +420,7 @@ test('retcb, should return a callback value', async () => {
 
   const res = await promisify(specmob({
     speccb: {
-      getmodifiedval: ([val], opts, fn) => (
+      getmodifiedval: ([val], fn) => (
         fn(null, `${val}modified`)
       )
     }
@@ -643,7 +643,7 @@ test('retopt, should apply a sequence of filters', async () => {
   const res = await promisify(specmob({
     typeprop: 'type',
     speccb: {
-      requestmonthlyhoroscope: (args, opts, fn) => (
+      requestmonthlyhoroscope: (args, fn) => (
         // maybe this returns a service communication...
         opts.thismonth % 2
           ? fn(null, 'you have good luck this month!')
@@ -773,7 +773,7 @@ test('getpass, should evaluate `true` for a pattern that is true', async () => {
 // eslint-disable-next-line max-len
 test('getpass, should evaluate `true` for a pattern with a callback that is true', async () => {
   const speccb = {
-    isstring: ([val], opts, fn) => fn(null, typeof val === 'string')
+    isstring: ([val], fn) => fn(null, typeof val === 'string')
   }
   const specfn = {
     isstring: ([val]) => typeof val === 'string',
@@ -909,7 +909,7 @@ test('retopt, should apply complex args, nested filters', async () => {
       }
     },
     speccb: {
-      applysubj: (args, opts, fn) => (
+      applysubj: (args, fn) => (
         state.cpargs = args,
 
         fn(null, Object.assign({ updated: true }, { graph: true })))

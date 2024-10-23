@@ -398,7 +398,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
         return fn(e)
       }
 
-      o.callcb(sess, cfg, graph, node, args, opts, spec, (err, fin, graph) => {
+      o.callcb(sess, cfg, graph, node, args, spec, (err, fin, graph) => {
         if (err) return fn(err)
 
         o.valordefval(sess, cfg, graph, node, ns, spec, fin, fn)
@@ -411,7 +411,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   // standard: (sess, cfg, graph, node, ..., fn)
   //       cb: (args, opts, fn, sess, cfg, graph, node)
   //
-  o.callcb = (sess, cfg, graph, node, args, opts, spec, fn) => {
+  o.callcb = (sess, cfg, graph, node, args, spec, fn) => {
     const func = o.getcb(spec.cbname)
     if (!func) {
       return speccb
@@ -419,7 +419,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
         : fn(specmoberr_specfnorcbnotfound('cb', spec.cbname))
     }
 
-    func(args, opts, (err, fin, ngraph = graph) => (
+    func(args, (err, fin, ngraph = graph) => (
       err
         ? o.emiterr(sess, cfg, ngraph, node, err, fin, fn)
         : fn(null, fin, ngraph)

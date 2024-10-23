@@ -24,21 +24,29 @@ This pattern returns the product of a function named 'sayhello',
 Nested and grouped patterns describe complex operations. This pattern resolves a monthly horoscope using the two-digit representation of the current month. "fn" stands for "function" and "cb" stands for "callback".
 ```javascript
 ({
-  optarr: [{
-    optarr: [{
-      format: 'mm'
-    },{
-      type: 'fn',
-      fnname: 'getdate',
-      name: 'date'
-    }],
-    type: 'fn',
-    fnname: 'getmonthfromdate',
-    name: 'monthnumber'
-  }],
   type: 'cb',
   cbname: 'requestmonthlyhoroscope',
-  name: 'horoscope'
+  name: 'horoscope',
+  argsdyn: [0],
+  args: [{
+    type: 'obj',
+    optarr: [{
+      type: 'fn',
+      fnname: 'getmonthfromdate',
+      name: 'monthnumber',
+      argsdyn: [0],
+      args: [{
+        type: 'obj',
+        optarr: [{
+          format: 'mm'
+        }, {
+          type: 'fn',
+          fnname: 'getdate',
+          name: 'date'
+        }]
+      }]
+    }]
+  }]
 })
 ```
 

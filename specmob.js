@@ -118,9 +118,10 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
   }
 
   o.emiterr = (sess, cfg, graph, node, err, val, fn, specerr) => (
-    specerrfn(sess, cfg, graph, node, specerr = o.geterr(err), (err, graph) => {
-      if (!specerr.isfatal) fn(null, val, graph)
-    }))
+    typeof specerrfn === 'function'
+  ) ? specerrfn(sess, cfg, graph, node, specerr = o.geterr(err), (err, graph) => {
+    if (!specerr.isfatal) fn(null, val, graph)
+  }) : (() => { throw new Error(stringify(specerr || {})) })()
 
   o.throw = (...args) => {
     console.error('[!!!] specmob: ', ...args)
@@ -197,7 +198,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
     if ((val === null || val === undefined) && opts.def !== undefined) {
       o.retopt(sess, cfg, graph, node, ns, opts.def, fn)
     } else if (val === undefined) {
-      throw specmoberr_specresolvesundefined(opts, ns)
+      fn(specmoberr_specresolvesundefined(opts, ns))
     } else {
       fn(null, val, graph)
     }
@@ -537,7 +538,6 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
     } else if (!opts) {
       return fn(null, null, graph)
     }
-
 
     const specfn = o.getspecfn(opts[o.typeprop])
     if (typeof specfn !== 'function') {

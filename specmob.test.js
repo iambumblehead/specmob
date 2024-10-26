@@ -7,10 +7,12 @@ import specmob from './specmob.js'
 const ns = { ns: 'ns' }
 const node = {
   node: 'node',
-  get: key => key
+  toJS: () => '{"/": "test-node"}',
+  get: key => `/node-${key}`
 }
 const graph = {
   graph: 'graph',
+  toJS: () => '{"/": "test-graph"}',
   get: () => node,
   has: key => key === '/'
 }
@@ -181,8 +183,19 @@ test('getnsargval/7 should return "string", when arg is not "string"', () => {
 
 // eslint-disable-next-line max-len
 test('getnsargval/7 should throw an error if ns is not defined and arg is not "this"', async () => {
-  await assert.rejects(async () => promisify(specmob({ typeprop: 'type' }).getnsargval)(
-    sess, graph, node, opts, null, 'thisval', 'ns.hello'), { message: 'key' })
+  const specmobinst = specmob({ typeprop: 'type' })
+
+  await assert.rejects(async () => specmobinst.getnsargval(
+    sess,
+    graph,
+    node,
+    opts,
+    null,
+    'thisval',
+    'ns.hello'
+  ), {
+    message: specmobinst.errnamespaceundefined(graph, node, null, opts).message
+  })
 })
 
 test('getargs should support custom namespace re', () => {
@@ -201,7 +214,9 @@ test('getargs should support custom namespace re', () => {
   assert.strictEqual(args[2], 'val0')
 })
 
-test('should throw error if spec resolves `undefined`', async () => {
+test('should throw error if spec resolves `undefined`', {
+  only: true
+}, async () => {
   const specmobinst = specmob({ nsre: /^(subj)\./, typeprop: 'type' })
 
   await assert.rejects(async () => specmobinst.getargs(sess, graph, node, {
@@ -210,20 +225,28 @@ test('should throw error if spec resolves `undefined`', async () => {
     this: 'val0',
     subj: { differentprop: 'val1' }
   }), {
-    message: specmobinst.specresolvesundefined({
-      args: ["subj.prop", "this"]
-    }, {
-      this: 'val0',
-      subj: { differentprop: 'val1' }
-    }).message
+    message: specmobinst.errnamespaceundefined(
+      graph,
+      node,
+      {
+        this: 'val0',
+        subj: { differentprop: 'val1' }
+      }, {
+        args: ["subj.prop", "this"]
+      }
+    ).message
   })
 
   await assert.rejects(async () => (
     promisify(specmobinst.valordefval)(
       sess, cfg, graph, node, ns, opts, undefined)
   ), {
-    message: specmobinst
-      .specresolvesundefined(opts, ns).message
+    message: specmobinst.errnamespaceundefined(
+      graph,
+      node,
+      opts,
+      ns
+    ).message
   })
 })
 

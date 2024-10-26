@@ -15,11 +15,8 @@ import castas from 'castas'
 const check = fnguard.spec
 const AND = 'AND'
 const OR = 'OR'
-const win = (typeof window === 'object' ? window : this) || {}
 
-const isPlainObj = ((toString, objproto = toString.call({})) =>
-  obj => obj && (toString.call(obj) === objproto)
-)(Object.prototype.toString)
+const isPlainObj = check.isobjlike
 
 const isgraph = graph => Boolean(
   typeof graph === 'object' && graph &&
@@ -47,11 +44,6 @@ const specmoberr_valisnotarr = optarr => new Error(
 const specmoberr_propundefined = spec => new Error(
   `invalid spec definition, "prop" required: ${stringify(spec)}`)
 
-const specmoberr_specresolvesundefined = (spec, space) => new Error(
-  "Spec must not resolve to an `undefined` value." +
-    " Instead, resolve `null` or set a default value." +
-    `\nspec: ${stringify(spec)},\nspace: ${stringify(space)}`)
-
 const fnres_multival = (val, graph) => ([val, graph])
 
 export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
@@ -65,8 +57,6 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
       ? obj[name]
       : null
   }
-
-  o.specresolvesundefined = specmoberr_specresolvesundefined
 
   o.nodegetkey = node =>
     node && typeof node.get === 'function' && node.get('key')
@@ -122,22 +112,19 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
       if (!specerr.isfatal) fn(null, val, graph)
     }))
 
-  o.throw = (...args) => {
-    console.error('[!!!] specmob: ', ...args)
-    throw new Error(...args)
-  }
+  o.errInst = (graph, node, msg) => (
+    Object.assign(new Error((
+      node ? node.get('key') + '\n' + msg : msg
+    )), {
+      graph: graph && graph.toJS(),
+      node: node && node.toJS()
+    }))
 
-  o.thrownode = (graph, node, ...args) => {
-    win.errgraph = graph
-    win.errnode = node
-    console.error('errgraph: ', graph && graph.toJS && graph.toJS())
-    console.error('errnode: ', node && node.toJS && node.toJS())
-    o.throw(o.nodegetkey(node), ...args)
-  }
-
-  o.throw_namespaceundefined = (graph, node, ns, opts) => (
-    o.thrownode(graph, node, (
-      `arg namespace must not be "undefined": ${o.stringify(opts)}`)))
+  o.errnamespaceundefined = (graph, node, spec, space) => o
+    .errInst(graph, node, (
+      "spec must not resolve to an `undefined` value." +
+        " Instead, resolve `null` or set a default value." +
+        `\nspec: ${stringify(spec)},\nspace: ${stringify(space)}`))
 
   // return the named callback from cbobj, and name
   o.getcb = name => o.objgetfn(speccb, name, 'cbfn')
@@ -197,7 +184,7 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
     if ((val === null || val === undefined) && opts.def !== undefined) {
       o.retopt(sess, cfg, graph, node, ns, opts.def, fn)
     } else if (val === undefined) {
-      fn(specmoberr_specresolvesundefined(opts, ns))
+      fn(o.errnamespaceundefined(graph, node, opts, ns))
     } else {
       fn(null, val, graph)
     }
@@ -221,15 +208,9 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
     if (arg === 'this') {
       argval = ns.this
     } else if (String(arg).startsWith('ns.')) {
-      argval = check.isobj(ns)
-        ? o.objlookup(arg.slice(3), ns)
-        : o.throw_namespaceundefined(graph, node, ns, opts)
+      argval = check.isobj(ns) ? o.objlookup(arg.slice(3), ns) : undefined
     } else if (nsre && nsre.test(arg)) {
-      argval = check.isobj(ns)
-        ? o.objlookup(arg, ns)
-        : o.throw_namespaceundefined(graph, node, ns, opts)
-      if (argval === undefined)
-        throw specmoberr_specresolvesundefined(opts, ns)
+      argval = check.isobj(ns) ? o.objlookup(arg, ns) : undefined
     } else if (String(arg).startsWith('sess.')) {
       argval = o.objlookup(arg.slice(5), sess)
     } else if (arg === 'ns') {
@@ -237,6 +218,9 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
     } else {
       argval = arg
     }
+
+    if (argval === undefined)
+      throw o.errnamespaceundefined(graph, node, ns, opts)
 
     return argval
   }

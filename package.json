@@ -1,7 +1,7 @@
 {
   "name": "specmob",
   "type": "module",
-  "version": "0.7.5",
+  "version": "0.7.6",
   "license": "MIT",
   "readmeFilename": "README.md",
   "description": "return dynamic results from dsl patterns",
@@ -25,14 +25,14 @@
     "fnguard": "^0.6.8"
   },
   "devDependencies": {
-    "c8": "^10.1.2",
     "eslint": "^9.13.0",
     "eslint-plugin-markdown": "^5.0.0"
   },
   "scripts": {
     "lint": "eslint .",
     "test": "node --test",
-    "test-cover": "c8 npm run test",
+    "test-cover": "node --test --experimental-test-coverage --test-coverage-exclude=*.test.js",
+    "test-cover": "node --test --experimental-test-coverage *.test.js",
     "prepublishOnly": "npm run lint && npm run test"
   }
 }

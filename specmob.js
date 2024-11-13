@@ -219,8 +219,9 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
       argval = arg
     }
 
-    if (argval === undefined)
-      throw o.errnamespaceundefined(graph, node, ns, opts)
+    if (argval === undefined) {
+      throw o.errnamespaceundefined(graph, node, opts, ns)
+    }
 
     return argval
   }

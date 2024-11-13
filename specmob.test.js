@@ -194,7 +194,7 @@ test('getnsargval/7 should throw an error if ns is not defined and arg is not "t
     'thisval',
     'ns.hello'
   ), {
-    message: specmobinst.errnamespaceundefined(graph, node, null, opts).message
+    message: specmobinst.errnamespaceundefined(graph, node, opts, null).message
   })
 })
 
@@ -214,9 +214,7 @@ test('getargs should support custom namespace re', () => {
   assert.strictEqual(args[2], 'val0')
 })
 
-test('should throw error if spec resolves `undefined`', {
-  only: true
-}, async () => {
+test('should throw error if spec resolves `undefined`', async () => {
   const specmobinst = specmob({ nsre: /^(subj)\./, typeprop: 'type' })
 
   await assert.rejects(async () => specmobinst.getargs(sess, graph, node, {
@@ -228,11 +226,10 @@ test('should throw error if spec resolves `undefined`', {
     message: specmobinst.errnamespaceundefined(
       graph,
       node,
+      { args: ["subj.prop", "this"] },
       {
         this: 'val0',
         subj: { differentprop: 'val1' }
-      }, {
-        args: ["subj.prop", "this"]
       }
     ).message
   })

@@ -617,7 +617,6 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
           retfn(sess, cfg, graph, node, ns, argsdynspec, (err, res, graph) => {
             if (err) return fn(err)
 
-            console.log('dynarg res', res)
             args[argsdynidx] = res
 
             next(args, argsdyn.slice(1), graph)

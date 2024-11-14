@@ -609,12 +609,18 @@ export default ({ speccb, specfn, specerrfn, typeprop, nsre } = {}, o = {}) => {
         if (!argsdyn.length)
           return fn(null, args, graph)
 
-        o.retobj(sess, cfg, graph, node, ns, args[argsdyn[0]], (err, res, graph) => {
-          if (err) return fn(err)
+        const argsdynidx = argsdyn[0]
+        const argsdynspec = args[argsdynidx]
+        const retfn = o.getspecfn(argsdynspec[o.typeprop])
 
-          args[argsdyn[0]] = res
+        queueMicrotask(() => {
+          retfn(sess, cfg, graph, node, ns, argsdynspec, (err, res, graph) => {
+            if (err) return fn(err)
 
-          next(args, argsdyn.slice(1), graph)
+            args[argsdynidx] = res
+
+            next(args, argsdyn.slice(1), graph)
+          })
         })
       })(spec.args.slice(), spec.argsdyn.slice(), graph)
     } else if (spec.optarr) {
